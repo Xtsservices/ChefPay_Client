@@ -8,6 +8,8 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Login from "./components/auth/Login";
 import RestaurantAdminDashboard from "./pages/restaurantAdmin/RestaurantAdminDashboard";
+import RestaurantList from "./pages/restaurantAdmin/Restaurants/RestaurantsList";
+import { AdminReports } from "./pages/restaurantAdmin/Reports/AdminReports";
 
 const queryClient = new QueryClient();
 
@@ -23,7 +25,7 @@ const App = () => (
 
           {/* Dashboard routes wrapped in AppLayout */}
           <Route
-            path="/restaurant-admin/*"
+            path="/admin-dashboard"
             element={
               <AppLayout>
                 <RestaurantAdminDashboard />
@@ -31,13 +33,23 @@ const App = () => (
             }
           />
           <Route
-            path="/index"
+            path="/restaurants-admin"
             element={
               <AppLayout>
-                <Index />
+                <RestaurantList />
               </AppLayout>
             }
           />
+          <Route
+            path="/admin-reports"
+            element={
+              <AppLayout>
+                <AdminReports />
+              </AppLayout>
+            }
+          />
+
+
 
           <Route
             path="/index"
@@ -47,6 +59,7 @@ const App = () => (
               </AppLayout>
             }
           />
+
 
           {/* Catch-all route */}
           <Route

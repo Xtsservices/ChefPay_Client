@@ -14,8 +14,11 @@ import { Building, ShoppingCart, IndianRupee } from "lucide-react";
 ChartJS.register(LineElement, CategoryScale, LinearScale, PointElement, ArcElement, Tooltip, Legend);
 
 const RestaurantAdminDashboard = () => {
-  const [selectedMonth, setSelectedMonth] = useState("all");
-  const [selectedYear, setSelectedYear] = useState("2025");
+  // Separate states for line chart and pie chart filters
+  const [lineSelectedMonth, setLineSelectedMonth] = useState("all");
+  const [lineSelectedYear, setLineSelectedYear] = useState("2025");
+  const [pieSelectedMonth, setPieSelectedMonth] = useState("all");
+  const [pieSelectedYear, setPieSelectedYear] = useState("2025");
 
   const totalRestaurants = 247;
   const todaysOrders = 1842;
@@ -48,10 +51,10 @@ const RestaurantAdminDashboard = () => {
   }));
 
   const filteredData =
-    selectedMonth === "all" ? monthlyData : dailyData;
+    lineSelectedMonth === "all" ? monthlyData : dailyData;
 
   const lineData = {
-    labels: selectedMonth === "all"
+    labels: lineSelectedMonth === "all"
       ? filteredData.map((d) => d.month)
       : filteredData.map((d) => d.day),
     datasets: [
@@ -126,13 +129,14 @@ const RestaurantAdminDashboard = () => {
       <div className="grid grid-cols-1 md:grid-cols-[65%_35%] gap-8">
 
         {/* Orders Over Time */}
-        <Card className=" bg-white text-black rounded-lg">
-          <CardHeader className="bg-white text-black rounded-lg flex items-center justify-center">
+        <Card className="bg-white text-black rounded-lg">
+          <CardHeader className="flex flex-row justify-between items-center gap-4 p-4">
             <CardTitle>Orders Over Time</CardTitle>
-            <div className="flex text-white gap-4 mt-2">
-              <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-                <SelectTrigger className="w-[120px]">
-                  <SelectValue placeholder="Select Month" />
+           
+            <div className="flex gap-2">
+              <Select value={lineSelectedMonth} onValueChange={setLineSelectedMonth}>
+                <SelectTrigger className="w-[90px] bg-transparent border border-black">
+                  <SelectValue placeholder="Month" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All</SelectItem>
@@ -150,9 +154,9 @@ const RestaurantAdminDashboard = () => {
                   <SelectItem value="dec">Dec</SelectItem>
                 </SelectContent>
               </Select>
-              <Select value={selectedYear} onValueChange={setSelectedYear}>
-                <SelectTrigger className="w-[120px]">
-                  <SelectValue placeholder="Select Year" />
+              <Select value={lineSelectedYear} onValueChange={setLineSelectedYear}>
+                <SelectTrigger className="w-[90px] bg-transparent border border-black">
+                  <SelectValue placeholder="Year" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="2025">2025</SelectItem>
@@ -184,13 +188,12 @@ const RestaurantAdminDashboard = () => {
 
         {/* Top 3 Restaurants Revenue */}
         <Card className="bg-white text-black rounded-lg">
-          
-            <CardHeader className="bg-white text-black rounded-lg flex items-center justify-center">
-            <CardTitle>Orders Over Time</CardTitle>
-            <div className="flex text-white gap-4">
-              <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-                <SelectTrigger className="w-[120px]">
-                  <SelectValue placeholder="Select Month" />
+          <CardHeader className="flex items-center justify-between">
+            <CardTitle className="flex-1 text-left">Top 3 Restaurants Revenue</CardTitle>
+            <div className="flex gap-2">
+              <Select value={pieSelectedMonth} onValueChange={setPieSelectedMonth}>
+                <SelectTrigger className="w-[90px] bg-transparent border border-black">
+                  <SelectValue placeholder="Month" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All</SelectItem>
@@ -208,9 +211,9 @@ const RestaurantAdminDashboard = () => {
                   <SelectItem value="dec">Dec</SelectItem>
                 </SelectContent>
               </Select>
-              <Select value={selectedYear} onValueChange={setSelectedYear}>
-                <SelectTrigger className="w-[120px]">
-                  <SelectValue placeholder="Select Year" />
+              <Select value={pieSelectedYear} onValueChange={setPieSelectedYear}>
+                <SelectTrigger className="w-[90px] bg-transparent border border-black">
+                  <SelectValue placeholder="Year" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="2025">2025</SelectItem>
@@ -219,7 +222,6 @@ const RestaurantAdminDashboard = () => {
                 </SelectContent>
               </Select>
             </div>
-         
           </CardHeader>
           <CardContent>
             <div style={{ height: "192px" }}>
