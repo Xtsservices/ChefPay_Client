@@ -8,7 +8,7 @@ import {
 import {
   Chart as ChartJS, LineElement, CategoryScale, LinearScale, PointElement, ArcElement, Tooltip, Legend
 } from "chart.js";
-import { Line, Pie } from "react-chartjs-2";
+import { Line, Doughnut } from "react-chartjs-2";
 import { Building, ShoppingCart, IndianRupee } from "lucide-react";
 
 ChartJS.register(LineElement, CategoryScale, LinearScale, PointElement, ArcElement, Tooltip, Legend);
@@ -26,43 +26,82 @@ const RestaurantAdminDashboard = () => {
 
   // Monthly dataset (aggregated)
   const monthlyData = [
-    { month: "Jan", tiffins: 20, lunch: 30, snacks: 15, beverages: 10, desserts: 5 },
-    { month: "Feb", tiffins: 25, lunch: 35, snacks: 20, beverages: 15, desserts: 10 },
-    { month: "Mar", tiffins: 18, lunch: 28, snacks: 12, beverages: 8, desserts: 4 },
-    { month: "Apr", tiffins: 30, lunch: 40, snacks: 25, beverages: 20, desserts: 15 },
-    { month: "May", tiffins: 35, lunch: 45, snacks: 30, beverages: 25, desserts: 20 },
-    { month: "Jun", tiffins: 28, lunch: 38, snacks: 22, beverages: 18, desserts: 12 },
-    { month: "Jul", tiffins: 40, lunch: 50, snacks: 35, beverages: 30, desserts: 25 },
-    { month: "Aug", tiffins: 32, lunch: 42, snacks: 28, beverages: 22, desserts: 18 },
-    { month: "Sep", tiffins: 45, lunch: 55, snacks: 40, beverages: 35, desserts: 30 },
-    { month: "Oct", tiffins: 48, lunch: 58, snacks: 42, beverages: 38, desserts: 32 },
-    { month: "Nov", tiffins: 42, lunch: 52, snacks: 38, beverages: 32, desserts: 28 },
-    { month: "Dec", tiffins: 50, lunch: 60, snacks: 45, beverages: 40, desserts: 35 },
+    { month: "Jan", tiffins: 5, lunch: 8, snacks: 12, beverages: 15, desserts: 18 },
+    { month: "Feb", tiffins: 7, lunch: 10, snacks: 14, beverages: 17, desserts: 20 },
+    { month: "Mar", tiffins: 6, lunch: 9, snacks: 13, beverages: 16, desserts: 19 },
+    { month: "Apr", tiffins: 8, lunch: 11, snacks: 15, beverages: 18, desserts: 21 },
+    { month: "May", tiffins: 9, lunch: 12, snacks: 16, beverages: 19, desserts: 22 },
+    { month: "Jun", tiffins: 8, lunch: 11, snacks: 15, beverages: 18, desserts: 21 },
+    { month: "Jul", tiffins: 10, lunch: 13, snacks: 17, beverages: 20, desserts: 23 },
+    { month: "Aug", tiffins: 9, lunch: 12, snacks: 16, beverages: 19, desserts: 22 },
+    { month: "Sep", tiffins: 11, lunch: 14, snacks: 18, beverages: 21, desserts: 24 },
+    { month: "Oct", tiffins: 12, lunch: 15, snacks: 19, beverages: 22, desserts: 25 },
+    { month: "Nov", tiffins: 11, lunch: 14, snacks: 18, beverages: 21, desserts: 24 },
+    { month: "Dec", tiffins: 13, lunch: 16, snacks: 20, beverages: 23, desserts: 26 },
   ];
 
-  // Daily dataset for one example month (replace with real API data)
+  // Daily dataset for one example month
   const dailyData = Array.from({ length: 31 }, (_, i) => ({
     day: `${i + 1}`,
-    tiffins: Math.floor(Math.random() * 20) + 5,
-    lunch: Math.floor(Math.random() * 30) + 10,
-    snacks: Math.floor(Math.random() * 15) + 5,
-    beverages: Math.floor(Math.random() * 10) + 2,
-    desserts: Math.floor(Math.random() * 8) + 1,
+    tiffins: Math.floor(Math.random() * 10) + 5,
+    lunch: Math.floor(Math.random() * 12) + 8,
+    snacks: Math.floor(Math.random() * 15) + 10,
+    beverages: Math.floor(Math.random() * 18) + 12,
+    desserts: Math.floor(Math.random() * 20) + 15,
   }));
 
-  const filteredData =
-    lineSelectedMonth === "all" ? monthlyData : dailyData;
+  const filteredData = lineSelectedMonth === "all" ? monthlyData : dailyData;
 
   const lineData = {
     labels: lineSelectedMonth === "all"
       ? filteredData.map((d) => d.month)
       : filteredData.map((d) => d.day),
     datasets: [
-      { label: "Tiffins", data: filteredData.map((d) => d.tiffins), borderColor: "#FBBF24", backgroundColor: "#FBBF2433", fill: true },
-      { label: "Lunch", data: filteredData.map((d) => d.lunch), borderColor: "#EF4444", backgroundColor: "#EF444433", fill: true },
-      { label: "Snacks", data: filteredData.map((d) => d.snacks), borderColor: "#3B82F6", backgroundColor: "#3B82F633", fill: true },
-      { label: "Beverages", data: filteredData.map((d) => d.beverages), borderColor: "#F97316", backgroundColor: "#F9731633", fill: true },
-      { label: "Desserts", data: filteredData.map((d) => d.desserts), borderColor: "#EC4899", backgroundColor: "#EC489933", fill: true },
+      { 
+        label: "Tiffins", 
+        data: filteredData.map((d) => d.tiffins), 
+        borderColor: "#FBBF24", 
+        backgroundColor: "transparent",
+        fill: false,
+        tension: 0.4,
+        borderWidth: 2
+      },
+      { 
+        label: "Lunch", 
+        data: filteredData.map((d) => d.lunch), 
+        borderColor: "#EF4444", 
+        backgroundColor: "transparent",
+        fill: false,
+        tension: 0.4,
+        borderWidth: 2
+      },
+      { 
+        label: "Snacks", 
+        data: filteredData.map((d) => d.snacks), 
+        borderColor: "#3B82F6", 
+        backgroundColor: "transparent",
+        fill: false,
+        tension: 0.4,
+        borderWidth: 2
+      },
+      { 
+        label: "Beverages", 
+        data: filteredData.map((d) => d.beverages), 
+        borderColor: "#F97316", 
+        backgroundColor: "transparent",
+        fill: false,
+        tension: 0.4,
+        borderWidth: 2
+      },
+      { 
+        label: "Desserts", 
+        data: filteredData.map((d) => d.desserts), 
+        borderColor: "#EC4899", 
+        backgroundColor: "transparent",
+        fill: false,
+        tension: 0.4,
+        borderWidth: 2
+      },
     ],
   };
 
@@ -78,7 +117,8 @@ const RestaurantAdminDashboard = () => {
       {
         data: topRestaurantsRevenue.map((r) => r.revenue),
         backgroundColor: ["#FBBF24", "#3B82F6", "#10B981"],
-        borderWidth: 1,
+        borderWidth: 0,
+        cutout: "60%",
       },
     ],
   };
@@ -92,157 +132,276 @@ const RestaurantAdminDashboard = () => {
   ];
 
   return (
-    <div className="p-3 space-y-8">
+    <div className="bg-white rounded-xl min-h-screen max-w-full overflow-hidden">
+      <div className="p-4 sm:p-6 space-y-6 max-w-full">
+        {/* Top Stat Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
+          <Card className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <CardContent className="flex items-center justify-between p-4 sm:p-6">
+              <div className="min-w-0 flex-1">
+                <div className="text-gray-600 text-xs sm:text-sm font-medium mb-1 text-black">Total Restaurants</div>
+                <div className="font-bold text-xl sm:text-3xl text-black truncate">{totalRestaurants}</div>
+              </div>
+              <div className="p-2 sm:p-3 bg-gray-100 rounded-full flex-shrink-0 ml-3">
+                <Building className="h-6 w-6 sm:h-8 sm:w-8 text-gray-700" />
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <CardContent className="flex items-center justify-between p-4 sm:p-6">
+              <div className="min-w-0 flex-1">
+                <div className="text-gray-600 text-xs sm:text-sm font-medium mb-1 text-black">Today's Orders</div>
+                <div className="font-bold text-xl sm:text-3xl text-black truncate">{todaysOrders}</div>
+              </div>
+              <div className="p-2 sm:p-3 bg-gray-100 rounded-full flex-shrink-0 ml-3">
+                <ShoppingCart className="h-6 w-6 sm:h-8 sm:w-8 text-gray-700" />
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <CardContent className="flex items-center justify-between p-4 sm:p-6">
+              <div className="min-w-0 flex-1">
+                <div className="text-gray-600 text-xs sm:text-sm font-medium mb-1 text-black">Today's Revenue</div>
+                <div className="font-bold text-xl sm:text-3xl text-black truncate">₹{todaysRevenue.toLocaleString()}</div>
+              </div>
+              <div className="p-2 sm:p-3 bg-gray-100 rounded-full flex-shrink-0 ml-3">
+                <IndianRupee className="h-6 w-6 sm:h-8 sm:w-8 text-gray-700" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
 
-      {/* Top Stat Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-        <Card className="bg-white text-black rounded-lg">
-          <CardContent className="flex items-center justify-between p-6">
-            <div>
-              <div className="text-gray-500 text-sm">Total Restaurants</div>
-              <div className="font-bold text-2xl">{totalRestaurants}</div>
-            </div>
-            <Building className="h-10 w-10 text-gray-700" />
-          </CardContent>
-        </Card>
-        <Card className="bg-white text-black rounded-lg">
-          <CardContent className="flex items-center justify-between p-6">
-            <div>
-              <div className="text-gray-500 text-sm">Today's Orders</div>
-              <div className="font-bold text-2xl">{todaysOrders}</div>
-            </div>
-            <ShoppingCart className="h-10 w-10 text-gray-700" />
-          </CardContent>
-        </Card>
-        <Card className="bg-white text-black rounded-lg">
-          <CardContent className="flex items-center justify-between p-6">
-            <div>
-              <div className="text-gray-500 text-sm">Today's Revenue</div>
-              <div className="font-bold text-2xl">₹{todaysRevenue.toLocaleString()}</div>
-            </div>
-            <IndianRupee className="h-10 w-10 text-gray-700" />
-          </CardContent>
-        </Card>
-      </div>
+        {/* Analytics Panels */}
+        <div className="grid grid-cols-1 xl:grid-cols-[2fr_1fr] gap-4 sm:gap-6 max-w-full">
+          {/* Orders Over Time */}
+          <Card className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden min-w-0">
+            <CardHeader className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 p-4 sm:p-6 pb-2 sm:pb-4">
+              <CardTitle className="text-base sm:text-lg font-semibold text-black truncate">Orders Over Time</CardTitle>
+              <div className="flex gap-2 sm:gap-3 flex-shrink-0">
+                <Select value={lineSelectedMonth} onValueChange={setLineSelectedMonth}>
+                  <SelectTrigger className="w-[80px] sm:w-[100px] h-8 sm:h-9 bg-white border border-gray-300 rounded-md text-xs sm:text-sm text-black">
+                    <SelectValue placeholder="All" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All</SelectItem>
+                    <SelectItem value="jan">Jan</SelectItem>
+                    <SelectItem value="feb">Feb</SelectItem>
+                    <SelectItem value="mar">Mar</SelectItem>
+                    <SelectItem value="apr">Apr</SelectItem>
+                    <SelectItem value="may">May</SelectItem>
+                    <SelectItem value="jun">Jun</SelectItem>
+                    <SelectItem value="jul">Jul</SelectItem>
+                    <SelectItem value="aug">Aug</SelectItem>
+                    <SelectItem value="sep">Sep</SelectItem>
+                    <SelectItem value="oct">Oct</SelectItem>
+                    <SelectItem value="nov">Nov</SelectItem>
+                    <SelectItem value="dec">Dec</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={lineSelectedYear} onValueChange={setLineSelectedYear}>
+                  <SelectTrigger className="w-[80px] sm:w-[100px] h-8 sm:h-9 bg-white border border-gray-300 rounded-md text-xs sm:text-sm text-black">
+                    <SelectValue placeholder="Year" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="2025">2025</SelectItem>
+                    <SelectItem value="2024">2024</SelectItem>
+                    <SelectItem value="2023">2023</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardHeader>
+            <CardContent className="p-4 sm:p-6 pt-2 min-w-0">
+              <div className="w-full" style={{ height: "250px" }}>
+               <Line 
+  data={lineData} 
+  options={{
+    responsive: true,
+    maintainAspectRatio: false,
+    interaction: {
+      mode: 'index',
+      intersect: false,
+    },
+    scales: { 
+      x: { 
+        grid: { display: false },
+        border: { display: false },
+        ticks: { 
+          color: "#6B7280", 
+          font: { size: 11 },
+          maxRotation: 0
+        }
+      }, 
+      y: { 
+        grid: { color: "#F3F4F6" },
+        border: { display: false },
+        ticks: { 
+          color: "#6B7280", 
+          font: { size: 11 } 
+        },
+        beginAtZero: true
+      } 
+    },
+    plugins: { 
+      legend: { display: false },
+      tooltip: {
+        enabled: true,
+        mode: 'index',
+        intersect: false,
+        backgroundColor: "#1F2937",
+        titleColor: "#F9FAFB",
+        bodyColor: "#F9FAFB",
+        borderColor: "#374151",
+        borderWidth: 1,
+        cornerRadius: 8,
+        padding: 12,
+        titleFont: {
+          size: 13,
+          weight: 'bold'
+        },
+        bodyFont: {
+          size: 12
+        },
+        displayColors: true,
+        usePointStyle: true,
+        callbacks: {
+          title: function(context) {
+            return lineSelectedMonth === "all" 
+              ? `Month: ${context[0].label}` 
+              : `Day: ${context[0].label}`;
+          },
+          label: function(context) {
+            return `${context.dataset.label}: ${context.parsed.y} orders`;
+          },
+          footer: function(tooltipItems) {
+            let sum = 0;
+            tooltipItems.forEach(function(tooltipItem) {
+              sum += tooltipItem.parsed.y;
+            });
+            return `Total: ${sum} orders`;
+          }
+        }
+      }
+    },
+    elements: {
+      point: {
+        radius: 0,
+        hoverRadius: 8,
+        hoverBorderWidth: 3,
+        hoverBorderColor: '#FFFFFF',
+        backgroundColor: function(context) {
+          return context.dataset.borderColor;
+        }
+      },
+      line: {
+        tension: 0.4,
+        borderWidth: 2
+      }
+    },
+    onHover: (event, activeElements) => {
+      const chart = event.chart;
+      chart.canvas.style.cursor = activeElements.length > 0 ? 'pointer' : 'default';
+    }
+  }} 
+/>
 
-      {/* Analytics Panels */}
-      <div className="grid grid-cols-1 md:grid-cols-[65%_35%] gap-8">
+              </div>
+              <div className="flex flex-wrap gap-3 sm:gap-4 mt-4 sm:mt-6">
+                {categories.map((cat) => (
+                  <span key={cat.label} className="flex items-center gap-2 text-xs sm:text-sm text-black font-medium">
+                    <span 
+                      className="w-3 h-3 rounded-full flex-shrink-0" 
+                      style={{ backgroundColor: cat.color }}
+                    ></span>
+                    <span className="whitespace-nowrap">{cat.label}</span>
+                  </span>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
 
-        {/* Orders Over Time */}
-        <Card className="bg-white text-black rounded-lg">
-          <CardHeader className="flex flex-row justify-between items-center gap-4 p-4">
-            <CardTitle>Orders Over Time</CardTitle>
-           
-            <div className="flex gap-2">
-              <Select value={lineSelectedMonth} onValueChange={setLineSelectedMonth}>
-                <SelectTrigger className="w-[90px] bg-transparent border border-black">
-                  <SelectValue placeholder="Month" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All</SelectItem>
-                  <SelectItem value="jan">Jan</SelectItem>
-                  <SelectItem value="feb">Feb</SelectItem>
-                  <SelectItem value="mar">Mar</SelectItem>
-                  <SelectItem value="apr">Apr</SelectItem>
-                  <SelectItem value="may">May</SelectItem>
-                  <SelectItem value="jun">Jun</SelectItem>
-                  <SelectItem value="jul">Jul</SelectItem>
-                  <SelectItem value="aug">Aug</SelectItem>
-                  <SelectItem value="sep">Sep</SelectItem>
-                  <SelectItem value="oct">Oct</SelectItem>
-                  <SelectItem value="nov">Nov</SelectItem>
-                  <SelectItem value="dec">Dec</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select value={lineSelectedYear} onValueChange={setLineSelectedYear}>
-                <SelectTrigger className="w-[90px] bg-transparent border border-black">
-                  <SelectValue placeholder="Year" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="2025">2025</SelectItem>
-                  <SelectItem value="2024">2024</SelectItem>
-                  <SelectItem value="2023">2023</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div style={{ height: "192px" }}>
-              <Line data={lineData} options={{
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: { x: { grid: { display: false } }, y: { grid: { color: "#E5E7EB" } } },
-                plugins: { legend: { display: false } }
-              }} />
-            </div>
-            <div className="flex flex-wrap gap-3 mt-4 text-sm">
-              {categories.map((cat) => (
-                <span key={cat.label} className="flex items-center gap-1">
-                  <span className="w-3 h-3 inline-block rounded-full" style={{ backgroundColor: cat.color }}></span>
-                  {cat.label}
-                </span>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Top 3 Restaurants Revenue */}
-        <Card className="bg-white text-black rounded-lg">
-          <CardHeader className="flex items-center justify-between">
-            <CardTitle className="flex-1 text-left">Top 3 Restaurants Revenue</CardTitle>
-            <div className="flex gap-2">
-              <Select value={pieSelectedMonth} onValueChange={setPieSelectedMonth}>
-                <SelectTrigger className="w-[90px] bg-transparent border border-black">
-                  <SelectValue placeholder="Month" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All</SelectItem>
-                  <SelectItem value="jan">Jan</SelectItem>
-                  <SelectItem value="feb">Feb</SelectItem>
-                  <SelectItem value="mar">Mar</SelectItem>
-                  <SelectItem value="apr">Apr</SelectItem>
-                  <SelectItem value="may">May</SelectItem>
-                  <SelectItem value="jun">Jun</SelectItem>
-                  <SelectItem value="jul">Jul</SelectItem>
-                  <SelectItem value="aug">Aug</SelectItem>
-                  <SelectItem value="sep">Sep</SelectItem>
-                  <SelectItem value="oct">Oct</SelectItem>
-                  <SelectItem value="nov">Nov</SelectItem>
-                  <SelectItem value="dec">Dec</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select value={pieSelectedYear} onValueChange={setPieSelectedYear}>
-                <SelectTrigger className="w-[90px] bg-transparent border border-black">
-                  <SelectValue placeholder="Year" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="2025">2025</SelectItem>
-                  <SelectItem value="2024">2024</SelectItem>
-                  <SelectItem value="2023">2023</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div style={{ height: "192px" }}>
-              <Pie data={pieData} options={{
-                responsive: true,
-                maintainAspectRatio: false,
-                cutout: "60%",
-                plugins: { legend: { display: false } }
-              }} />
-            </div>
-            <div className="flex flex-wrap gap-3 mt-4 text-sm">
-              {topRestaurantsRevenue.map((r, index) => (
-                <span key={r.name} className="flex items-center gap-1">
-                  <span className="w-3 h-3 inline-block rounded-full"
-                    style={{ backgroundColor: pieData.datasets[0].backgroundColor[index] }}></span>
-                  {r.name}
-                </span>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+          {/* Top 3 Restaurants Revenue */}
+          <Card className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden min-w-0">
+            <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 sm:p-6 pb-2 sm:pb-4 gap-3">
+              <CardTitle className="text-base sm:text-lg font-semibold text-black leading-tight">Top 3 Restaurants<br className="sm:hidden" /> Revenue</CardTitle>
+              <div className="flex gap-2 flex-shrink-0">
+                <Select value={pieSelectedMonth} onValueChange={setPieSelectedMonth}>
+                  <SelectTrigger className="w-[60px] sm:w-[80px] h-8 sm:h-9 bg-white border border-gray-300 rounded-md text-xs sm:text-sm text-black">
+                    <SelectValue placeholder="All" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All</SelectItem>
+                    <SelectItem value="jan">Jan</SelectItem>
+                    <SelectItem value="feb">Feb</SelectItem>
+                    <SelectItem value="mar">Mar</SelectItem>
+                    <SelectItem value="apr">Apr</SelectItem>
+                    <SelectItem value="may">May</SelectItem>
+                    <SelectItem value="jun">Jun</SelectItem>
+                    <SelectItem value="jul">Jul</SelectItem>
+                    <SelectItem value="aug">Aug</SelectItem>
+                    <SelectItem value="sep">Sep</SelectItem>
+                    <SelectItem value="oct">Oct</SelectItem>
+                    <SelectItem value="nov">Nov</SelectItem>
+                    <SelectItem value="dec">Dec</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={pieSelectedYear} onValueChange={setPieSelectedYear}>
+                  <SelectTrigger className="w-[60px] sm:w-[80px] h-8 sm:h-9 bg-white border border-gray-300 rounded-md text-xs sm:text-sm text-black">
+                    <SelectValue placeholder="Year" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="2025">2025</SelectItem>
+                    <SelectItem value="2024">2024</SelectItem>
+                    <SelectItem value="2023">2023</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardHeader>
+            <CardContent className="p-4 sm:p-6 pt-2 min-w-0">
+              <div style={{ height: "150px" }} className="flex items-center justify-center w-full">
+                <Doughnut 
+                  data={pieData} 
+                  options={{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: "60%",
+                    plugins: { 
+                      legend: { display: false },
+                      tooltip: {
+                        backgroundColor: "#1F2937",
+                        titleColor: "#F9FAFB",
+                        bodyColor: "#F9FAFB",
+                        borderColor: "#374151",
+                        borderWidth: 1,
+                        cornerRadius: 8,
+                        callbacks: {
+                          label: function(context) {
+                            return `${context.label}: ₹${context.parsed.toLocaleString()}`;
+                          }
+                        }
+                      }
+                    }
+                  }} 
+                />
+              </div>
+              <div className="flex flex-col gap-2 sm:gap-3 mt-4 sm:mt-6">
+                {topRestaurantsRevenue.map((r, index) => (
+                  <div key={r.name} className="flex items-center justify-between min-w-0 gap-2">
+                    <div className="flex items-center gap-2 min-w-0 flex-1">
+                      <span 
+                        className="w-3 h-3 rounded-full flex-shrink-0"
+                        style={{ backgroundColor: pieData.datasets[0].backgroundColor[index] }}
+                      ></span>
+                      <span className="text-xs sm:text-sm text-black font-medium truncate">{r.name}</span>
+                    </div>
+                    <span className="text-xs sm:text-sm font-semibold text-black whitespace-nowrap">₹{r.revenue.toLocaleString()}</span>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );

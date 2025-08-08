@@ -48,12 +48,11 @@ export function AppSidebar() {
         <div className="p-4">
           <div className="flex items-center gap-3">
             <div className="h-8 w-8 bg-gradient-primary rounded-lg flex items-center justify-center shrink-0">
-              <span className="text-primary-foreground font-bold text-sm">L</span>
+              <span className="text-primary-foreground font-bold text-sm">C</span>
             </div>
             {!collapsed && (
               <div>
-                <h2 className="font-semibold text-sidebar-foreground">Layout App</h2>
-                <p className="text-xs text-sidebar-foreground/60">Dashboard</p>
+                <h2 className="font-semibold text-sidebar-foreground">ChefPay</h2>
               </div>
             )}
           </div>
@@ -86,7 +85,7 @@ export function AppSidebar() {
         {/* User Info */}
         {!collapsed && (
           <div className="mt-auto p-4 border-t border-sidebar-border">
-            <div className="flex items-center gap-3 p-3 rounded-lg bg-sidebar-accent/30">
+            {/* <div className="flex items-center gap-3 p-3 rounded-lg bg-sidebar-accent/30">
               <div className="h-8 w-8 rounded-full bg-gradient-primary flex items-center justify-center">
                 <span className="text-primary-foreground text-sm font-medium">JD</span>
               </div>
@@ -94,7 +93,7 @@ export function AppSidebar() {
                 <p className="text-sm font-medium text-sidebar-foreground truncate">John Doe</p>
                 <p className="text-xs text-sidebar-foreground/60 truncate">john@example.com</p>
               </div>
-            </div>
+            </div> */}
           </div>
         )}
       </SidebarContent>
