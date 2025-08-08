@@ -43,7 +43,10 @@ const Login = () => {
     if (otp === '111111') {
       showToast("Login Successful", "Welcome to your dashboard!");
       setTimeout(() => {
-        navigate('/admin-dashboard');
+
+        // navigate('/admin-dashboard');
+        navigate('/restaurant-manager-dashboard');
+        
         console.log('Navigating to dashboard...');
       }, 1500);
     } else {

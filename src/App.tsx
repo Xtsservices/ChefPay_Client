@@ -10,6 +10,7 @@ import Login from "./components/auth/Login";
 import RestaurantAdminDashboard from "./pages/restaurantAdmin/RestaurantAdminDashboard";
 import RestaurantList from "./pages/restaurantAdmin/Restaurants/RestaurantsList";
 import { AdminReports } from "./pages/restaurantAdmin/Reports/AdminReports";
+import RestaurantManagerDashboard from "./pages/restaurantManager/RestaurantManagerDashboard";
 
 const queryClient = new QueryClient();
 
@@ -48,6 +49,17 @@ const App = () => (
               </AppLayout>
             }
           />
+
+{/* ====================RestaurantManagerDashboard============= */}
+ <Route
+            path="/restaurant-manager-dashboard"
+            element={
+              <AppLayout>
+                <RestaurantManagerDashboard />
+              </AppLayout>
+            }
+          />
+
 
 
 
