@@ -7,6 +7,7 @@ import {
   Settings,
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
+import { useSelector } from "react-redux";
 
 import {
   Sidebar,
@@ -18,13 +19,22 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { AppState } from "@/store/storeTypes";
 
-// navigation items with relevant icons
-const navigationItems = [
+// role: "restaurant-admin"
+const navigationAdminItems = [
   { title: "Dashboard", url: "/admin-dashboard", icon: Home },
   { title: "Restaurants", url: "/restaurants-admin", icon: UtensilsCrossed },
   { title: "Reports", url: "/admin-reports", icon: FileBarChart },
-  // { title: "Settings", url: "/settings", icon: Settings },
+];
+
+// role: "restaurant-manager"
+const navigationRestaurantManagerItems = [
+  { title: "Dashboard", url: "/restaurant-manager-dashboard", icon: Home },
+  { title: "Orders", url: "/restaurant-orders", icon: UtensilsCrossed },
+  { title: "Menu", url: "/restaurant-menu", icon: FileBarChart },
+  { title: "Items List", url: "/restaurant-items", icon: Settings },
+  { title: "Reports", url: "/restaurant-reports", icon: FileBarChart },
 ];
 
 export function AppSidebar() {
@@ -33,7 +43,19 @@ export function AppSidebar() {
   const location = useLocation();
   const currentPath = location.pathname;
 
-  // highlight if current path starts with item.url
+  const currentUserData = useSelector(
+    (state: AppState) => state.currentUserData
+  );
+  const userRole = currentUserData?.role || "restaurant-manager";
+
+  // pick nav items based on role
+  const navigationItems =
+    userRole === "restaurant-admin"
+      ? navigationAdminItems
+      : userRole === "restaurant-manager"
+      ? navigationRestaurantManagerItems
+      : [];
+
   const isActive = (path: string) => currentPath.startsWith(path);
 
   const getNavCls = (active: boolean) =>
@@ -42,7 +64,9 @@ export function AppSidebar() {
       : "hover:bg-sidebar-accent/50 text-sidebar-foreground";
 
   return (
-    <Sidebar className={`transition-all duration-300 ${collapsed ? "w-16" : "w-64"}`}>
+    <Sidebar
+      className={`transition-all duration-300 ${collapsed ? "w-16" : "w-64"}`}
+    >
       <SidebarContent className="bg-sidebar border-r border-sidebar-border">
         {/* Logo + Title */}
         <div className="p-4">
@@ -51,9 +75,7 @@ export function AppSidebar() {
               <span className="text-primary-foreground font-bold text-sm">C</span>
             </div>
             {!collapsed && (
-              <div>
-                <h2 className="font-semibold text-sidebar-foreground">ChefPay</h2>
-              </div>
+              <h2 className="font-semibold text-sidebar-foreground">ChefPay</h2>
             )}
           </div>
         </div>
@@ -69,7 +91,9 @@ export function AppSidebar() {
                     <SidebarMenuButton asChild>
                       <NavLink
                         to={item.url}
-                        className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 ${getNavCls(active)}`}
+                        className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 ${getNavCls(
+                          active
+                        )}`}
                       >
                         <item.icon className="h-5 w-5 shrink-0" />
                         {!collapsed && <span className="truncate">{item.title}</span>}
@@ -81,21 +105,6 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
-
-        {/* User Info */}
-        {!collapsed && (
-          <div className="mt-auto p-4 border-t border-sidebar-border">
-            {/* <div className="flex items-center gap-3 p-3 rounded-lg bg-sidebar-accent/30">
-              <div className="h-8 w-8 rounded-full bg-gradient-primary flex items-center justify-center">
-                <span className="text-primary-foreground text-sm font-medium">JD</span>
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-sidebar-foreground truncate">John Doe</p>
-                <p className="text-xs text-sidebar-foreground/60 truncate">john@example.com</p>
-              </div>
-            </div> */}
-          </div>
-        )}
       </SidebarContent>
     </Sidebar>
   );

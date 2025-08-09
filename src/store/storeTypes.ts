@@ -1,0 +1,25 @@
+// types.ts
+
+// Define user data type
+export interface UserData {
+  id: number;
+  firstName: string | null;
+  lastName: string | null;
+  email: string | null;
+  mobile: string;
+  canteenId: number | null;
+  createdAt: string; 
+  updatedAt: string;
+  role: string; // e.g., "restaurant-admin", "restaurant-manager", etc.
+}
+// App state structure
+export interface AppState {
+  currentUserData: UserData | null;
+
+}
+
+// Action type
+export interface Action {
+  type: string;
+  payload?: any;
+}

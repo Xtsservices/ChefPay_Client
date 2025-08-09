@@ -11,6 +11,10 @@ import RestaurantAdminDashboard from "./pages/restaurantAdmin/RestaurantAdminDas
 import RestaurantList from "./pages/restaurantAdmin/Restaurants/RestaurantsList";
 import { AdminReports } from "./pages/restaurantAdmin/Reports/AdminReports";
 import RestaurantManagerDashboard from "./pages/restaurantManager/RestaurantManagerDashboard";
+import RestaurantManagerOrders from "./pages/restaurantManager/RestaurantOrders/RestaurantManagerOrders";
+import RestaurentManageMenu from "./pages/restaurantManager/RestaurentMenu/RestaurentManageMenu";
+import ItemsList from "./pages/restaurantManager/RestaurentItems/ItemsList";
+
 
 const queryClient = new QueryClient();
 
@@ -50,8 +54,10 @@ const App = () => (
             }
           />
 
-{/* ====================RestaurantManagerDashboard============= */}
- <Route
+          {/* Dashboard routes wrapped in AppLayout */}
+
+          {/* ====================RestaurantManagerDashboard============= */}
+          <Route
             path="/restaurant-manager-dashboard"
             element={
               <AppLayout>
@@ -60,8 +66,38 @@ const App = () => (
             }
           />
 
-
-
+          <Route
+            path="/restaurant-orders"
+            element={
+              <AppLayout>
+                <RestaurantManagerOrders />
+              </AppLayout>
+            }
+          />
+          <Route
+            path="/restaurant-menu"
+            element={
+              <AppLayout>
+                <RestaurentManageMenu />
+              </AppLayout>
+            }
+          />
+          <Route
+            path="/restaurant-items"
+            element={
+              <AppLayout>
+                <ItemsList />
+              </AppLayout>
+            }
+          />
+          <Route
+            path="/restaurant-reports"
+            element={
+              <AppLayout>
+               <AdminReports />
+              </AppLayout>
+            }
+          />
 
           <Route
             path="/index"
@@ -71,7 +107,6 @@ const App = () => (
               </AppLayout>
             }
           />
-
 
           {/* Catch-all route */}
           <Route
