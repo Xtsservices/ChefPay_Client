@@ -1,17 +1,20 @@
-import { useState } from 'react';
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Smartphone, Shield } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { apiPostWithoutToken } from "@/api/apis";
+import { useDispatch } from "react-redux";
 
 const Login = () => {
-  const [mobile, setMobile] = useState('');
-  const [otp, setOtp] = useState('');
+  const [mobile, setMobile] = useState("");
+  const [otp, setOtp] = useState("");
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [toast, setToast] = useState(null);
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const showToast = (title, description, variant = "default") => {
     setToast({ title, description, variant });
@@ -20,38 +23,92 @@ const Login = () => {
 
   const handleMobileSubmit = async () => {
     if (!/^\d{10}$/.test(mobile)) {
-      showToast("Invalid Mobile Number", "Please enter a valid 10-digit mobile number.", "destructive");
+      showToast(
+        "Invalid Mobile Number",
+        "Please enter a valid 10-digit mobile number.",
+        "destructive"
+      );
       return;
     }
 
     setIsLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate API call
-    showToast("OTP Sent", "A one-time password has been sent to your mobile.");
-    setStep(2);
+    try {
+      const response = await apiPostWithoutToken("/login", { mobile });
+      console.log("Mobile number submitted successfully:", response);
+      if (response.status === 200) {
+        showToast(
+          "OTP Sent",
+          "A one-time password has been sent to your mobile."
+        );
+        setStep(2);
+      }
+    } catch (error) {
+      const errorMessage =
+        error.response?.data?.message || "Failed to send OTP";
+      console.error("Error submitting mobile number:", error);
+      showToast("Error", errorMessage, "destructive");
+      setIsLoading(false);
+      return;
+    }
+
     setIsLoading(false);
   };
 
   const handleOtpSubmit = async () => {
     if (!/^\d{6}$/.test(otp)) {
-      showToast("Invalid OTP", "Please enter a valid 6-digit OTP.", "destructive");
+      showToast(
+        "Invalid OTP",
+        "Please enter a valid 6-digit OTP.",
+        "destructive"
+      );
       return;
     }
 
     setIsLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 1500));
 
-    if (otp === '111111') {
-      showToast("Login Successful", "Welcome to your dashboard!");
-      setTimeout(() => {
+    try {
+      const response = await apiPostWithoutToken("/verifyOtp", { otp, mobile });
 
-        // navigate('/admin-dashboard');
-        navigate('/restaurant-manager-dashboard');
-        
-        console.log('Navigating to dashboard...');
-      }, 1500);
-    } else {
-      showToast("Invalid OTP", "Please try again.", "destructive");
+      console.log("verifyOtp", response);
+
+      if (response.status === 200) {
+        showToast("Login Successful", "Welcome to your dashboard!");
+
+        const userData = response.data.data;
+        console.log("userData", userData);
+
+        if (userData) {
+          localStorage.setItem("accessToken", response.data.token);
+          const role = userData.userRoles[0].role.name;
+        console.log("userDatarole", role);
+
+          dispatch({ type: "currentUserData", payload: userData });
+          dispatch({ type: "role", payload: role });
+          
+          //  || "restaurant-manager";
+          setTimeout(() => {
+            if (role === "restaurant-admin") {
+              navigate("/admin-dashboard");
+            } else if (role === "restaurant-manager") {
+              navigate("/restaurant-manager-dashboard");
+            } else if (role === "restaurant-staff") {
+              navigate("/restaurant-staff-dashboard");
+            }
+          }, 1500);
+        }
+      }
+
+      setOtp("");
+      setMobile("");
+    } catch (error) {
+      const errorMessage =
+        error.response?.data?.message || "Failed to send OTP";
+      console.error("Error submitting mobile number:", error);
+      showToast("Error", errorMessage, "destructive");
+      setIsLoading(false);
+      return;
     }
+
     setIsLoading(false);
   };
 
@@ -71,11 +128,13 @@ const Login = () => {
 
         {/* Floating food icons */}
         <div className="food-particles">
-          {['🍕', '🍔', '🍎', '🌮', '🍦', '🍰', '🥗', '🍜'].map((emoji, index) => (
-            <div key={index} className={`food-particle food-${index + 1}`}>
-              {emoji}
-            </div>
-          ))}
+          {["🍕", "🍔", "🍎", "🌮", "🍦", "🍰", "🥗", "🍜"].map(
+            (emoji, index) => (
+              <div key={index} className={`food-particle food-${index + 1}`}>
+                {emoji}
+              </div>
+            )
+          )}
         </div>
 
         {/* Gradient overlay */}
@@ -97,10 +156,12 @@ const Login = () => {
                   )}
                 </div>
                 <CardTitle className="text-3xl sm:text-4xl font-bold text-white">
-                  {step === 1 ? 'Welcome Back' : 'Verify Identity'}
+                  {step === 1 ? "Welcome Back" : "Verify Identity"}
                 </CardTitle>
                 <p className="text-gray-300 text-sm">
-                  {step === 1 ? 'Enter your mobile to continue' : 'Enter the OTP sent to your phone'}
+                  {step === 1
+                    ? "Enter your mobile to continue"
+                    : "Enter the OTP sent to your phone"}
                 </p>
               </CardHeader>
 
@@ -112,7 +173,9 @@ const Login = () => {
                         type="tel"
                         placeholder="10-digit mobile number"
                         value={mobile}
-                        onChange={(e) => setMobile(e.target.value.replace(/\D/g, ''))}
+                        onChange={(e) =>
+                          setMobile(e.target.value.replace(/\D/g, ""))
+                        }
                         className="input-3d h-14 text-lg pl-6 bg-white/5 border-white/20 text-white placeholder-gray-400 focus:bg-white/10 transition-all duration-300"
                         maxLength={10}
                         disabled={isLoading}
@@ -121,8 +184,8 @@ const Login = () => {
                         <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
                       </div>
                     </div>
-                    
-                    <Button 
+
+                    <Button
                       className="btn-3d w-full h-14 text-lg font-semibold bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl"
                       onClick={handleMobileSubmit}
                       disabled={isLoading || mobile.length !== 10}
@@ -146,14 +209,16 @@ const Login = () => {
                         type="text"
                         placeholder="6-digit OTP"
                         value={otp}
-                        onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
+                        onChange={(e) =>
+                          setOtp(e.target.value.replace(/\D/g, ""))
+                        }
                         className="input-3d h-14 text-lg text-center tracking-[0.5em] bg-white/5 border-white/20 text-white placeholder-gray-400 focus:bg-white/10 transition-all duration-300"
                         maxLength={6}
                         disabled={isLoading}
                       />
                     </div>
-                    
-                    <Button 
+
+                    <Button
                       className="btn-3d w-full h-14 text-lg font-semibold bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl"
                       onClick={handleOtpSubmit}
                       disabled={isLoading || otp.length !== 6}
@@ -170,7 +235,7 @@ const Login = () => {
                       )}
                     </Button>
 
-                    <Button 
+                    <Button
                       variant="ghost"
                       className="w-full text-gray-300 hover:text-white hover:bg-white/10"
                       onClick={() => setStep(1)}
@@ -183,10 +248,7 @@ const Login = () => {
 
                 <div className="text-center pt-4">
                   <p className="text-sm text-gray-400">
-                    {step === 1 ? 
-                      'We\'ll send a secure OTP to your mobile' : 
-                      <span>Demo OTP: <code className="bg-white/10 px-2 py-1 rounded text-green-400">111111</code></span>
-                    }
+                    {step === 1 && "We'll send a secure OTP to your mobile"}
                   </p>
                 </div>
               </CardContent>
@@ -197,11 +259,13 @@ const Login = () => {
 
       {/* Toast Notification */}
       {toast && (
-        <div className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg backdrop-blur-md transform transition-all duration-300 ${
-          toast.variant === 'destructive' 
-            ? 'bg-red-500/20 border border-red-500/30 text-red-100' 
-            : 'bg-green-500/20 border border-green-500/30 text-green-100'
-        }`}>
+        <div
+          className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg backdrop-blur-md transform transition-all duration-300 ${
+            toast.variant === "destructive"
+              ? "bg-red-500/20 border border-red-500/30 text-red-100"
+              : "bg-green-500/20 border border-green-500/30 text-green-100"
+          }`}
+        >
           <h4 className="font-semibold">{toast.title}</h4>
           <p className="text-sm opacity-90">{toast.description}</p>
         </div>

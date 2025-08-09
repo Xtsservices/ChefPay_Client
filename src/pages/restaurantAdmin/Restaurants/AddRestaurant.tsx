@@ -1,4 +1,5 @@
 // components/AddRestaurant.tsx
+import { apiPost } from "@/api/apis";
 import React, { useState, useEffect } from "react";
 
 type FormState = {
@@ -153,9 +154,19 @@ const AddRestaurant: React.FC<Props> = ({ onSave, editData, isEditMode = false }
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit =async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
+    console.log("form data ready to be submitted:", form);
+    if(isEditMode) {
+      // Handle edit logic here (API call, state update, etc.)
+      // http://localhost:3100/api/canteen/createCanteen
+      const response = await apiPost('/canteen/createCanteen', form);
+      console.log("Updating restaurant with data: response", response);
+    }else{
+      // Handle add logic here (API call, state update, etc.)
+      console.log("Adding new restaurant with data:", form);
+    }
     onSave();
   };
 

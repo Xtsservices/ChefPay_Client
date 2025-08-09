@@ -4,12 +4,15 @@ import { Action, AppState } from './storeTypes';
 
 const initialData: AppState = {
   currentUserData: null,
+  role: '',
 };
 
 function Reducer(state: AppState = initialData, action: Action): AppState {
   switch (action.type) {
     case 'currentUserData':
       return {...state, currentUserData: action.payload};
+      case 'role':
+      return {...state, role: action.payload};
     default:
       return state;
   }

@@ -43,11 +43,10 @@ export function AppSidebar() {
   const location = useLocation();
   const currentPath = location.pathname;
 
-  const currentUserData = useSelector(
-    (state: AppState) => state.currentUserData
-  );
-  const userRole = currentUserData?.role || "restaurant-manager";
+  const currentUserData = useSelector((state: AppState) => state.currentUserData);
+  const userRole = useSelector((state: AppState) => state.role);
 
+console.log("userRole",userRole)
   // pick nav items based on role
   const navigationItems =
     userRole === "restaurant-admin"

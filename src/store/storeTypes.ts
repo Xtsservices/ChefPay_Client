@@ -11,11 +11,17 @@ export interface UserData {
   createdAt: string; 
   updatedAt: string;
   role: string; // e.g., "restaurant-admin", "restaurant-manager", etc.
+  userRoles: Array<{
+    role: {
+      id: number;
+      name: string; // e.g., "restaurant-admin", "restaurant-manager"
+    };
+  }>;
 }
 // App state structure
 export interface AppState {
   currentUserData: UserData | null;
-
+  role: string; // User's role, e.g., "restaurant-admin", "restaurant-manager"
 }
 
 // Action type
