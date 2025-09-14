@@ -1,10 +1,14 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Edit, Trash2, Eye } from "lucide-react";
 import ItemAddModal from "@/common/ItemAddModal";
 import CreateMenuModal from "@/common/CreateMenuModal";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { apiGet, apiPost } from "@/api/apis";
+
 
 interface Category {
   name: string;
@@ -21,13 +25,33 @@ interface MenuItem {
   description: string;
   image: string;
 }
+interface ApiCategory {
+  id: number;
+  name: string;
+  description: string | null;
+  status: string;
+  createdAt: number;
+  updatedAt: number;
+}
 
 const ItemsList: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [isCreateMenuModalOpen, setIsCreateMenuModalOpen] = useState<boolean>(false);
+   const [isCreateCategoryModalOpen, setIsCreateCategoryModalOpen] = useState<boolean>(false);
   const [modalMode, setModalMode] = useState<"add" | "edit">("add");
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>("home");
+   const [newCategoryName, setNewCategoryName] = useState<string>("");
+   const [categories, setCategories] = useState<Category[]>([
+    { name: "Home", count: 0, active: true },
+    { name: "Tiffins", count: 0, active: false },
+    { name: "Lunch", count: 0, active: false },
+    { name: "Beverages", count: 0, active: false },
+    { name: "Snacks", count: 0, active: false },
+    { name: "Desserts", count: 0, active: false },
+  ]);
+
+   const [apiCategories, setApiCategories] = useState<ApiCategory[]>([]);
 
   const menuItems: MenuItem[] = [
     {
@@ -141,6 +165,35 @@ const ItemsList: React.FC = () => {
     
   ];
 
+   // Fetch categories from API
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await apiGet('/category/allCategories');
+        const apiData: ApiCategory[] = response.data.data;
+        setApiCategories(apiData);
+
+        // Merge API categories with initial categories, avoiding duplicates
+        setCategories(prev => {
+          const newCategories = apiData
+            .filter(apiCat => !prev.some(cat => cat.name.toLowerCase() === apiCat.name.toLowerCase()))
+            .map(apiCat => ({
+              name: apiCat.name,
+              count: 0,
+              active: false
+            }));
+          return [
+            ...prev,
+            ...newCategories
+          ];
+        });
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+      }
+    };
+    fetchCategories();
+  }, []);
+
   // Calculate category counts dynamically
   const getCategoryCount = (categoryName: string): number => {
     if (categoryName.toLowerCase() === "home") {
@@ -151,8 +204,16 @@ const ItemsList: React.FC = () => {
     ).length;
   };
 
+  // Update category counts
+  const updatedCategories = categories.map(category => ({
+    ...category,
+    count: getCategoryCount(category.name),
+    active: selectedCategory === category.name.toLowerCase()
+  }));
+
+
   // Generate categories with dynamic counts
-  const categories: Category[] = [
+  const categories2: Category[] = [
     { name: "Home", count: getCategoryCount("home"), active: selectedCategory === "home" },
     { name: "Tiffins", count: getCategoryCount("tiffins"), active: selectedCategory === "tiffins" },
     { name: "Lunch", count: getCategoryCount("lunch"), active: selectedCategory === "lunch" },
@@ -188,6 +249,44 @@ const ItemsList: React.FC = () => {
     setIsCreateMenuModalOpen(true);
   };
 
+   const handleCreateCategory = (): void => {
+    setIsCreateCategoryModalOpen(true);
+  };
+
+  const handleCreateCategorySubmit = async (e: React.FormEvent): Promise<void> => {
+     e.preventDefault(); 
+    console.log("Submitting new category:", newCategoryName);
+    if (!newCategoryName.trim()) {
+      alert("Category name cannot be empty");
+      return;
+    }
+console.log("Creating category:", newCategoryName);
+    try {
+      const response = await apiPost('/category/createCategory', {
+        name: newCategoryName,
+      });
+console.log("Create category response:", response);
+return
+      if (response.status === 200) {
+        setCategories([...categories, {
+          name: newCategoryName,
+          count: 0,
+          active: false
+        }]);
+        setNewCategoryName("");
+        setIsCreateCategoryModalOpen(false);
+        alert("Category created successfully");
+      } else {
+        console.error("Failed to create category:", response);
+        throw new Error("Failed to create category");
+      }
+    } catch (error) {
+      console.log("Error details:", error);
+      console.error("Error creating category:", error);
+      alert("Failed to create category");
+    }
+  };
+
   const handleModalSubmit = (formData: any): void => {
     if (modalMode === "add") {
       console.log("Adding new item:", formData);
@@ -199,6 +298,8 @@ const ItemsList: React.FC = () => {
       // You might want to update your menuItems state here
     }
   };
+
+
 
   const handleCreateMenuSubmit = (menuData: any): void => {
     console.log("Creating new menu:", menuData);
@@ -231,6 +332,12 @@ const ItemsList: React.FC = () => {
           </p>
         </div>
         <div className="flex gap-3">
+            <Button 
+            variant="outline"
+            onClick={handleCreateCategory}
+          >
+            Create Category
+          </Button>
           <Button 
             variant="outline"
             onClick={handleCreateMenu}
@@ -409,6 +516,46 @@ const ItemsList: React.FC = () => {
         menuItems={menuItems}
         onSubmit={handleCreateMenuSubmit}
       />
+
+       {/* Create Category Modal */}
+       <Dialog open={isCreateCategoryModalOpen} onOpenChange={setIsCreateCategoryModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Create New Category</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleCreateCategorySubmit}>
+            <div className="space-y-4">
+              <Select
+                value={newCategoryName}
+                onValueChange={setNewCategoryName}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {apiCategories.map((category) => (
+                    <SelectItem key={category.id} value={category.name}>
+                      {category.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <DialogFooter className="mt-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsCreateCategoryModalOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={!newCategoryName.trim()}>
+                Create
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
