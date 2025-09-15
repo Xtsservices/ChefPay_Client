@@ -32,8 +32,8 @@ const navigationAdminItems = [
 const navigationRestaurantManagerItems = [
   { title: "Dashboard", url: "/restaurant-manager-dashboard", icon: Home },
   { title: "Orders", url: "/restaurant-orders", icon: UtensilsCrossed },
-  { title: "Menu", url: "/restaurant-menu", icon: FileBarChart },
   { title: "Items List", url: "/restaurant-items", icon: Settings },
+  { title: "Menu", url: "/restaurant-menu", icon: FileBarChart },
   { title: "Reports", url: "/restaurant-reports", icon: FileBarChart },
 ];
 
