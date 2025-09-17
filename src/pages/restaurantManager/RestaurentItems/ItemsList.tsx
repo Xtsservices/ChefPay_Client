@@ -60,6 +60,7 @@ const ItemsList: React.FC = () => {
   const [modalMode, setModalMode] = useState<"add" | "edit">("add");
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>("home");
+
   const [newCategoryName, setNewCategoryName] = useState<string>("");
   const [categories, setCategories] = useState<Category[]>([
     { name: "Home", count: 0, active: true },
@@ -207,7 +208,6 @@ const ItemsList: React.FC = () => {
         console.log(response);
         const apiData: ApiCategory[] = response.data.data;
         setApiCategories(apiData);
-
         // Merge API categories with initial categories, avoiding duplicates
         setCategories((prev) => {
           const newCategories = apiData
@@ -329,8 +329,7 @@ const ItemsList: React.FC = () => {
       const response = await apiPost("/category/createCategory", {
         name: newCategoryName,
       });
-      console.log("Create category response:", response);
-      return;
+
       if (response.status === 200) {
         setCategories([
           ...categories,
@@ -385,6 +384,8 @@ const ItemsList: React.FC = () => {
     return `Showing ${count} ${categoryDisplayName.toLowerCase()} items`;
   };
 
+  console.log("categories", categories);
+
   return (
     <div className="space-y-6">
       {/* Header Section */}
@@ -398,12 +399,15 @@ const ItemsList: React.FC = () => {
           </p>
         </div>
         <div className="flex gap-3">
+
           <Button variant="outline" onClick={handleCreateCategory}>
             Create Category
           </Button>
+            
           <Button variant="outline" onClick={handleCreateMenu}>
             Create Menu
           </Button>
+            
           <Button className="bg-gradient-primary" onClick={handleAddItem}>
             <Plus className="h-4 w-4 mr-2" />
             Add Item
@@ -419,7 +423,7 @@ const ItemsList: React.FC = () => {
               <CardTitle className="text-lg">Categories</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              {categories.map((category, index) => (
+              {categories?.map((category, index) => (
                 <div
                   key={index}
                   onClick={() => handleCategoryClick(category.name)}
@@ -567,6 +571,7 @@ const ItemsList: React.FC = () => {
         mode={modalMode}
         editItem={editingItem}
         onSubmit={handleModalSubmit}
+        categories={categories.map(cat => cat.name)}
       />
 
       {/* Create Menu Modal */}
