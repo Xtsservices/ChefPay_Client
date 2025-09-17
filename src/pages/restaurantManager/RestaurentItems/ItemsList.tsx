@@ -1,14 +1,31 @@
 import { useEffect, useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Edit, Trash2, Eye } from "lucide-react";
 import ItemAddModal from "@/common/ItemAddModal";
 import CreateMenuModal from "@/common/CreateMenuModal";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { apiGet, apiPost } from "@/api/apis";
-
 
 interface Category {
   name: string;
@@ -36,13 +53,15 @@ interface ApiCategory {
 
 const ItemsList: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-  const [isCreateMenuModalOpen, setIsCreateMenuModalOpen] = useState<boolean>(false);
-   const [isCreateCategoryModalOpen, setIsCreateCategoryModalOpen] = useState<boolean>(false);
+  const [isCreateMenuModalOpen, setIsCreateMenuModalOpen] =
+    useState<boolean>(false);
+  const [isCreateCategoryModalOpen, setIsCreateCategoryModalOpen] =
+    useState<boolean>(false);
   const [modalMode, setModalMode] = useState<"add" | "edit">("add");
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>("home");
-   const [newCategoryName, setNewCategoryName] = useState<string>("");
-   const [categories, setCategories] = useState<Category[]>([
+  const [newCategoryName, setNewCategoryName] = useState<string>("");
+  const [categories, setCategories] = useState<Category[]>([
     { name: "Home", count: 0, active: true },
     { name: "Tiffins", count: 0, active: false },
     { name: "Lunch", count: 0, active: false },
@@ -51,7 +70,7 @@ const ItemsList: React.FC = () => {
     { name: "Desserts", count: 0, active: false },
   ]);
 
-   const [apiCategories, setApiCategories] = useState<ApiCategory[]>([]);
+  const [apiCategories, setApiCategories] = useState<ApiCategory[]>([]);
 
   const menuItems: MenuItem[] = [
     {
@@ -61,7 +80,8 @@ const ItemsList: React.FC = () => {
       price: 299,
       isVeg: false,
       description: "Aromatic basmati rice cooked with tender chicken",
-      image: "https://www.licious.in/blog/wp-content/uploads/2022/06/chicken-hyderabadi-biryani-01-750x750.jpg"
+      image:
+        "https://www.licious.in/blog/wp-content/uploads/2022/06/chicken-hyderabadi-biryani-01-750x750.jpg",
     },
     {
       id: 2,
@@ -69,8 +89,10 @@ const ItemsList: React.FC = () => {
       category: "lunch",
       price: 249,
       isVeg: true,
-      description: "Creamy tomato-based curry with soft paneer cubes and aromatic",
-      image: "https://www.licious.in/blog/wp-content/uploads/2022/06/chicken-hyderabadi-biryani-01-750x750.jpg"
+      description:
+        "Creamy tomato-based curry with soft paneer cubes and aromatic",
+      image:
+        "https://www.licious.in/blog/wp-content/uploads/2022/06/chicken-hyderabadi-biryani-01-750x750.jpg",
     },
     {
       id: 3,
@@ -79,7 +101,8 @@ const ItemsList: React.FC = () => {
       price: 25,
       isVeg: true,
       description: "Traditional Indian spiced tea with cardamom, cloves and",
-      image: "https://www.licious.in/blog/wp-content/uploads/2022/06/chicken-hyderabadi-biryani-01-750x750.jpg"
+      image:
+        "https://www.licious.in/blog/wp-content/uploads/2022/06/chicken-hyderabadi-biryani-01-750x750.jpg",
     },
     {
       id: 4,
@@ -88,7 +111,8 @@ const ItemsList: React.FC = () => {
       price: 120,
       isVeg: true,
       description: "Crispy rice crepe filled with spiced potato mixture",
-      image: "https://www.licious.in/blog/wp-content/uploads/2022/06/chicken-hyderabadi-biryani-01-750x750.jpg"
+      image:
+        "https://www.licious.in/blog/wp-content/uploads/2022/06/chicken-hyderabadi-biryani-01-750x750.jpg",
     },
     {
       id: 5,
@@ -96,8 +120,10 @@ const ItemsList: React.FC = () => {
       category: "desserts",
       price: 150,
       isVeg: true,
-      description: "Rich chocolate brownie served warm with vanilla ice cream and",
-      image: "https://www.licious.in/blog/wp-content/uploads/2022/06/chicken-hyderabadi-biryani-01-750x750.jpg"
+      description:
+        "Rich chocolate brownie served warm with vanilla ice cream and",
+      image:
+        "https://www.licious.in/blog/wp-content/uploads/2022/06/chicken-hyderabadi-biryani-01-750x750.jpg",
     },
     {
       id: 6,
@@ -105,8 +131,10 @@ const ItemsList: React.FC = () => {
       category: "snacks",
       price: 45,
       isVeg: true,
-      description: "Crispy pastry filled with spiced potatoes and peas, served with",
-      image: "https://www.licious.in/blog/wp-content/uploads/2022/06/chicken-hyderabadi-biryani-01-750x750.jpg"
+      description:
+        "Crispy pastry filled with spiced potatoes and peas, served with",
+      image:
+        "https://www.licious.in/blog/wp-content/uploads/2022/06/chicken-hyderabadi-biryani-01-750x750.jpg",
     },
     {
       id: 7,
@@ -114,8 +142,10 @@ const ItemsList: React.FC = () => {
       category: "beverages",
       price: 80,
       isVeg: true,
-      description: "Refreshing yogurt-based drink blended with fresh mango pulp and",
-      image: "https://www.licious.in/blog/wp-content/uploads/2022/06/chicken-hyderabadi-biryani-01-750x750.jpg"
+      description:
+        "Refreshing yogurt-based drink blended with fresh mango pulp and",
+      image:
+        "https://www.licious.in/blog/wp-content/uploads/2022/06/chicken-hyderabadi-biryani-01-750x750.jpg",
     },
     {
       id: 8,
@@ -124,7 +154,8 @@ const ItemsList: React.FC = () => {
       price: 320,
       isVeg: false,
       description: "Tender chicken in rich cashew and herbs",
-      image: "https://www.licious.in/blog/wp-content/uploads/2022/06/chicken-hyderabadi-biryani-01-750x750.jpg"
+      image:
+        "https://www.licious.in/blog/wp-content/uploads/2022/06/chicken-hyderabadi-biryani-01-750x750.jpg",
     },
     {
       id: 9,
@@ -133,7 +164,8 @@ const ItemsList: React.FC = () => {
       price: 35,
       isVeg: true,
       description: "Mumbai's favorite street food with potato fritters",
-      image: "https://www.licious.in/blog/wp-content/uploads/2022/06/chicken-hyderabadi-biryani-01-750x750.jpg"
+      image:
+        "https://www.licious.in/blog/wp-content/uploads/2022/06/chicken-hyderabadi-biryani-01-750x750.jpg",
     },
     {
       id: 10,
@@ -142,7 +174,8 @@ const ItemsList: React.FC = () => {
       price: 60,
       isVeg: true,
       description: "Steamed rice cakes served with lentil curry",
-      image: "https://www.licious.in/blog/wp-content/uploads/2022/06/chicken-hyderabadi-biryani-01-750x750.jpg"
+      image:
+        "https://www.licious.in/blog/wp-content/uploads/2022/06/chicken-hyderabadi-biryani-01-750x750.jpg",
     },
     {
       id: 11,
@@ -151,7 +184,8 @@ const ItemsList: React.FC = () => {
       price: 40,
       isVeg: true,
       description: "Traditional flattened rice breakfast with vegetables",
-      image: "https://www.licious.in/blog/wp-content/uploads/2022/06/chicken-hyderabadi-biryani-01-750x750.jpg"
+      image:
+        "https://www.licious.in/blog/wp-content/uploads/2022/06/chicken-hyderabadi-biryani-01-750x750.jpg",
     },
     {
       id: 12,
@@ -160,32 +194,35 @@ const ItemsList: React.FC = () => {
       price: 45,
       isVeg: true,
       description: "Savory semolina porridge with vegetables and spices",
-      image: "https://www.licious.in/blog/wp-content/uploads/2022/06/chicken-hyderabadi-biryani-01-750x750.jpg"
+      image:
+        "https://www.licious.in/blog/wp-content/uploads/2022/06/chicken-hyderabadi-biryani-01-750x750.jpg",
     },
-    
   ];
 
-   // Fetch categories from API
+  // Fetch categories from API
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await apiGet('/category/allCategories');
+        const response = await apiGet("/categories/getAllCategories");
+        console.log(response);
         const apiData: ApiCategory[] = response.data.data;
         setApiCategories(apiData);
 
         // Merge API categories with initial categories, avoiding duplicates
-        setCategories(prev => {
+        setCategories((prev) => {
           const newCategories = apiData
-            .filter(apiCat => !prev.some(cat => cat.name.toLowerCase() === apiCat.name.toLowerCase()))
-            .map(apiCat => ({
+            .filter(
+              (apiCat) =>
+                !prev.some(
+                  (cat) => cat.name.toLowerCase() === apiCat.name.toLowerCase()
+                )
+            )
+            .map((apiCat) => ({
               name: apiCat.name,
               count: 0,
-              active: false
+              active: false,
             }));
-          return [
-            ...prev,
-            ...newCategories
-          ];
+          return [...prev, ...newCategories];
         });
       } catch (error) {
         console.error("Error fetching categories:", error);
@@ -199,35 +236,60 @@ const ItemsList: React.FC = () => {
     if (categoryName.toLowerCase() === "home") {
       return menuItems.length; // Show all items for "Home"
     }
-    return menuItems.filter(item => 
-      item.category.toLowerCase() === categoryName.toLowerCase()
+    return menuItems.filter(
+      (item) => item.category.toLowerCase() === categoryName.toLowerCase()
     ).length;
   };
 
   // Update category counts
-  const updatedCategories = categories.map(category => ({
+  const updatedCategories = categories.map((category) => ({
     ...category,
     count: getCategoryCount(category.name),
-    active: selectedCategory === category.name.toLowerCase()
+    active: selectedCategory === category.name.toLowerCase(),
   }));
-
 
   // Generate categories with dynamic counts
   const categories2: Category[] = [
-    { name: "Home", count: getCategoryCount("home"), active: selectedCategory === "home" },
-    { name: "Tiffins", count: getCategoryCount("tiffins"), active: selectedCategory === "tiffins" },
-    { name: "Lunch", count: getCategoryCount("lunch"), active: selectedCategory === "lunch" },
-    { name: "Beverages", count: getCategoryCount("beverages"), active: selectedCategory === "beverages" },
-    { name: "Snacks", count: getCategoryCount("snacks"), active: selectedCategory === "snacks" },
-    { name: "Desserts", count: getCategoryCount("desserts"), active: selectedCategory === "desserts" },
+    {
+      name: "Home",
+      count: getCategoryCount("home"),
+      active: selectedCategory === "home",
+    },
+    {
+      name: "Tiffins",
+      count: getCategoryCount("tiffins"),
+      active: selectedCategory === "tiffins",
+    },
+    {
+      name: "Lunch",
+      count: getCategoryCount("lunch"),
+      active: selectedCategory === "lunch",
+    },
+    {
+      name: "Beverages",
+      count: getCategoryCount("beverages"),
+      active: selectedCategory === "beverages",
+    },
+    {
+      name: "Snacks",
+      count: getCategoryCount("snacks"),
+      active: selectedCategory === "snacks",
+    },
+    {
+      name: "Desserts",
+      count: getCategoryCount("desserts"),
+      active: selectedCategory === "desserts",
+    },
   ];
 
   // Filter menu items based on selected category
-  const filteredMenuItems = selectedCategory === "home" 
-    ? menuItems // Show all items for "Home"
-    : menuItems.filter(item => 
-        item.category.toLowerCase() === selectedCategory.toLowerCase()
-      );
+  const filteredMenuItems =
+    selectedCategory === "home"
+      ? menuItems // Show all items for "Home"
+      : menuItems.filter(
+          (item) =>
+            item.category.toLowerCase() === selectedCategory.toLowerCase()
+        );
 
   const handleCategoryClick = (categoryName: string): void => {
     setSelectedCategory(categoryName.toLowerCase());
@@ -249,30 +311,35 @@ const ItemsList: React.FC = () => {
     setIsCreateMenuModalOpen(true);
   };
 
-   const handleCreateCategory = (): void => {
+  const handleCreateCategory = (): void => {
     setIsCreateCategoryModalOpen(true);
   };
 
-  const handleCreateCategorySubmit = async (e: React.FormEvent): Promise<void> => {
-     e.preventDefault(); 
+  const handleCreateCategorySubmit = async (
+    e: React.FormEvent
+  ): Promise<void> => {
+    e.preventDefault();
     console.log("Submitting new category:", newCategoryName);
     if (!newCategoryName.trim()) {
       alert("Category name cannot be empty");
       return;
     }
-console.log("Creating category:", newCategoryName);
+    console.log("Creating category:", newCategoryName);
     try {
-      const response = await apiPost('/category/createCategory', {
+      const response = await apiPost("/category/createCategory", {
         name: newCategoryName,
       });
-console.log("Create category response:", response);
-return
+      console.log("Create category response:", response);
+      return;
       if (response.status === 200) {
-        setCategories([...categories, {
-          name: newCategoryName,
-          count: 0,
-          active: false
-        }]);
+        setCategories([
+          ...categories,
+          {
+            name: newCategoryName,
+            count: 0,
+            active: false,
+          },
+        ]);
         setNewCategoryName("");
         setIsCreateCategoryModalOpen(false);
         alert("Category created successfully");
@@ -299,9 +366,8 @@ return
     }
   };
 
-
-
   const handleCreateMenuSubmit = (menuData: any): void => {
+    menuData.canteenId = 1;
     console.log("Creating new menu:", menuData);
     // Add logic to handle menu creation
     // You might want to send this data to your backend
@@ -309,10 +375,10 @@ return
 
   const getActiveItemsText = (): string => {
     const count = filteredMenuItems.length;
-    const categoryDisplayName = categories.find(cat => 
-      cat.name.toLowerCase() === selectedCategory
-    )?.name || selectedCategory;
-    
+    const categoryDisplayName =
+      categories.find((cat) => cat.name.toLowerCase() === selectedCategory)
+        ?.name || selectedCategory;
+
     if (selectedCategory === "home") {
       return `Showing all ${count} items`;
     }
@@ -332,22 +398,13 @@ return
           </p>
         </div>
         <div className="flex gap-3">
-            <Button 
-            variant="outline"
-            onClick={handleCreateCategory}
-          >
+          <Button variant="outline" onClick={handleCreateCategory}>
             Create Category
           </Button>
-          <Button 
-            variant="outline"
-            onClick={handleCreateMenu}
-          >
+          <Button variant="outline" onClick={handleCreateMenu}>
             Create Menu
           </Button>
-          <Button 
-            className="bg-gradient-primary"
-            onClick={handleAddItem}
-          >
+          <Button className="bg-gradient-primary" onClick={handleAddItem}>
             <Plus className="h-4 w-4 mr-2" />
             Add Item
           </Button>
@@ -367,17 +424,17 @@ return
                   key={index}
                   onClick={() => handleCategoryClick(category.name)}
                   className={`flex items-center justify-between p-3 rounded-lg cursor-pointer transition-all duration-200 hover:bg-muted/50 ${
-                    category.active 
-                      ? 'bg-gradient-primary text-primary-foreground shadow-md' 
-                      : 'hover:bg-muted hover:shadow-sm'
+                    category.active
+                      ? "bg-gradient-primary text-primary-foreground shadow-md"
+                      : "hover:bg-muted hover:shadow-sm"
                   }`}
                 >
                   <span className="font-medium">{category.name}</span>
-                  <Badge 
+                  <Badge
                     variant={category.active ? "secondary" : "outline"}
                     className={`transition-all duration-200 ${
-                      category.active 
-                        ? "bg-white/20 text-white border-white/30" 
+                      category.active
+                        ? "bg-white/20 text-white border-white/30"
                         : "hover:bg-muted"
                     }`}
                   >
@@ -412,23 +469,26 @@ return
           {filteredMenuItems.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
               {filteredMenuItems.map((item) => (
-                <Card key={item.id} className="hover:shadow-elegant transition-all duration-300 hover:-translate-y-1 group">
+                <Card
+                  key={item.id}
+                  className="hover:shadow-elegant transition-all duration-300 hover:-translate-y-1 group"
+                >
                   <CardContent className="p-0">
                     {/* Item Image */}
                     <div className="relative aspect-square overflow-hidden rounded-t-lg">
-                      <img 
-                        src={item.image} 
+                      <img
+                        src={item.image}
                         alt={item.name}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       />
-                     
+
                       {/* Hover Actions */}
                       <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-2">
                         <Button size="sm" variant="secondary">
                           <Eye className="h-4 w-4" />
                         </Button>
-                        <Button 
-                          size="sm" 
+                        <Button
+                          size="sm"
                           variant="secondary"
                           onClick={() => handleEditItem(item)}
                         >
@@ -450,20 +510,20 @@ return
                           {item.category}
                         </p>
                       </div>
-                      
+
                       <p className="text-sm text-muted-foreground line-clamp-2 min-h-[40px]">
                         {item.description}
                       </p>
-                      
+
                       <div className="flex items-center justify-between pt-2">
                         <span className="text-lg font-bold text-foreground">
                           ₹{item.price}
                         </span>
-                        <Badge 
+                        <Badge
                           variant={item.isVeg ? "default" : "destructive"}
                           className={`${
-                            item.isVeg 
-                              ? "bg-green-100 text-green-800 hover:bg-green-200" 
+                            item.isVeg
+                              ? "bg-green-100 text-green-800 hover:bg-green-200"
                               : "bg-red-100 text-red-800 hover:bg-red-200"
                           }`}
                         >
@@ -486,12 +546,12 @@ return
               </h3>
               <p className="text-sm text-muted-foreground mb-4 max-w-sm">
                 No items available in the{" "}
-                <span className="font-medium capitalize">{selectedCategory}</span> category.
+                <span className="font-medium capitalize">
+                  {selectedCategory}
+                </span>{" "}
+                category.
               </p>
-              <Button 
-                onClick={handleAddItem}
-                className="bg-gradient-primary"
-              >
+              <Button onClick={handleAddItem} className="bg-gradient-primary">
                 <Plus className="h-4 w-4 mr-2" />
                 Add First Item
               </Button>
@@ -501,8 +561,8 @@ return
       </div>
 
       {/* Add/Edit Item Modal */}
-      <ItemAddModal 
-        open={isModalOpen} 
+      <ItemAddModal
+        open={isModalOpen}
         onOpenChange={setIsModalOpen}
         mode={modalMode}
         editItem={editingItem}
@@ -517,8 +577,11 @@ return
         onSubmit={handleCreateMenuSubmit}
       />
 
-       {/* Create Category Modal */}
-       <Dialog open={isCreateCategoryModalOpen} onOpenChange={setIsCreateCategoryModalOpen}>
+      {/* Create Category Modal */}
+      <Dialog
+        open={isCreateCategoryModalOpen}
+        onOpenChange={setIsCreateCategoryModalOpen}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Create New Category</DialogTitle>
