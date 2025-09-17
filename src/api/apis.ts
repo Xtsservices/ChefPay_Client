@@ -2,8 +2,8 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
 
 
-// Base API URL1
-const API_BASE_URL = "http://172.16.4.159:3100/api";
+// Base API URL
+const API_BASE_URL = "http://10.229.246.217:3100/api";
 
 
 

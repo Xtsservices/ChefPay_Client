@@ -20,6 +20,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { AppState } from "@/store/storeTypes";
+import USER_ROLE from "@/utils/utils";
 
 // role: "restaurant-admin"
 const navigationAdminItems = [
@@ -44,15 +45,14 @@ export function AppSidebar() {
   const currentPath = location.pathname;
 
   const currentUserData = useSelector((state: AppState) => state.currentUserData);
-  //const userRole = useSelector((state: AppState) => state.role);
-  const userRole = "restaurant-manager";
+  const userRole = useSelector((state: AppState) => state.role);
 
 //console.log("userRole",userRole)
   //pick nav items based on role
   const navigationItems =
-    userRole === "restaurant-admin"
+    userRole === USER_ROLE.ADMIN
       ? navigationAdminItems
-      : userRole === "restaurant-manager"
+      : userRole === USER_ROLE.CANTEEN_MANAGER
       ? navigationRestaurantManagerItems
       : [];
 

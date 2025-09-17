@@ -6,6 +6,7 @@ import { ArrowRight, Smartphone, Shield } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { apiPostWithoutToken } from "@/api/apis";
 import { useDispatch } from "react-redux";
+import USER_ROLE from "@/utils/utils";
 
 const Login = () => {
   const [mobile, setMobile] = useState("");
@@ -33,7 +34,7 @@ const Login = () => {
 
     setIsLoading(true);
     try {
-      const response = await apiPostWithoutToken("/login", { mobile });
+      const response = await apiPostWithoutToken("/auth/login", { mobile });
       console.log("Mobile number submitted successfully:", response);
       if (response.status === 200) {
         showToast(
@@ -67,19 +68,19 @@ const Login = () => {
     setIsLoading(true);
 
     try {
-      const response = await apiPostWithoutToken("/verifyOtp", { otp, mobile });
+      const response = await apiPostWithoutToken("/auth/verifyOtp", { otp, mobile });
 
       console.log("verifyOtp", response);
 
       if (response.status === 200) {
         showToast("Login Successful", "Welcome to your dashboard!");
 
-        const userData = response.data.data;
+        const userData = response.data.user;
         console.log("userData", userData);
 
         if (userData) {
           localStorage.setItem("accessToken", response.data.token);
-          const role = userData.userRoles[0].role.name;
+          const role = userData.role;
         console.log("userDatarole", role);
 
           dispatch({ type: "currentUserData", payload: userData });
@@ -87,11 +88,11 @@ const Login = () => {
           
           //  || "restaurant-manager";
           setTimeout(() => {
-            if (role === "restaurant-admin") {
+            if (role === USER_ROLE.ADMIN) {
               navigate("/admin-dashboard");
-            } else if (role === "restaurant-manager") {
+            } else if (role === USER_ROLE.CANTEEN_MANAGER) {
               navigate("/restaurant-manager-dashboard");
-            } else if (role === "restaurant-staff") {
+            } else if (role === USER_ROLE.STAFF) {
               navigate("/restaurant-staff-dashboard");
             }
           }, 1500);
