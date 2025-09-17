@@ -1,8 +1,10 @@
 // api.ts
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
 
+
 // Base API URL1
 const API_BASE_URL = "http://172.16.4.159:3100/api";
+
 
 
 // Helper to get token from localStorage
@@ -71,8 +73,7 @@ export const apiPostWithoutToken = <T = any>(
   url: string,
   data?: any,
   config?: AxiosRequestConfig
-): Promise<AxiosResponse<T>> =>
-  axiosWithoutToken.post<T>(url, data, config);
+): Promise<AxiosResponse<T>> => axiosWithoutToken.post<T>(url, data, config);
 
 // File upload with token
 export const apiUploadFile = <T = any>(
