@@ -42,6 +42,7 @@ interface ItemAddModalProps {
   mode: "add" | "edit";
   editItem?: MenuItem | null;
   onSubmit?: (data: FormData) => void;
+  categories: string[];
 }
 
 const ItemAddModal: React.FC<ItemAddModalProps> = ({ 
@@ -49,7 +50,8 @@ const ItemAddModal: React.FC<ItemAddModalProps> = ({
   onOpenChange, 
   mode = "add", 
   editItem = null,
-  onSubmit 
+  onSubmit ,
+  categories
 }) => {
   const [formData, setFormData] = useState<FormData>({
     itemName: "",
@@ -63,14 +65,14 @@ const ItemAddModal: React.FC<ItemAddModalProps> = ({
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const categories: string[] = [
-    "Home",
-    "Tiffins", 
-    "Lunch",
-    "Beverages",
-    "Snacks",
-    "Desserts"
-  ];
+  // const categories: string[] = [
+  //   "Home",
+  //   "Tiffins", 
+  //   "Lunch",
+  //   "Beverages",
+  //   "Snacks",
+  //   "Desserts"
+  // ];
 
   // Populate form data when editing
   useEffect(() => {
@@ -258,6 +260,7 @@ const ItemAddModal: React.FC<ItemAddModalProps> = ({
   const modalTitle = mode === "add" ? "ADD NEW ITEM" : "EDIT ITEM";
   const submitButtonText = mode === "add" ? "Save Item" : "Update Item";
 
+  console.log("Categories in modal:", categories);
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px] max-h-[90vh] p-0 bg-transparent border-0 shadow-none">
@@ -337,8 +340,8 @@ const ItemAddModal: React.FC<ItemAddModalProps> = ({
                     <SelectValue placeholder="Select category" />
                   </SelectTrigger>
                   <SelectContent className="bg-white/95 text-gray-900 backdrop-blur-sm">
-                    {categories.map((category) => (
-                      <SelectItem key={category} value={category.toLowerCase()}>
+                    {categories?.map((category) => (
+                      <SelectItem key={category} value={category ? category.toLowerCase() : ''}>
                         {category}
                       </SelectItem>
                     ))}

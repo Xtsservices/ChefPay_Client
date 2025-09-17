@@ -43,13 +43,15 @@ const ItemsList: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>("home");
    const [newCategoryName, setNewCategoryName] = useState<string>("");
    const [categories, setCategories] = useState<Category[]>([
-    { name: "Home", count: 0, active: true },
-    { name: "Tiffins", count: 0, active: false },
-    { name: "Lunch", count: 0, active: false },
-    { name: "Beverages", count: 0, active: false },
-    { name: "Snacks", count: 0, active: false },
-    { name: "Desserts", count: 0, active: false },
+    
   ]);
+
+  // { name: "Home", count: 0, active: true },
+  //   { name: "Tiffins", count: 0, active: false },
+  //   { name: "Lunch", count: 0, active: false },
+  //   { name: "Beverages", count: 0, active: false },
+  //   { name: "Snacks", count: 0, active: false },
+  //   { name: "Desserts", count: 0, active: false },
 
    const [apiCategories, setApiCategories] = useState<ApiCategory[]>([]);
 
@@ -172,7 +174,6 @@ const ItemsList: React.FC = () => {
         const response = await apiGet('/category/allCategories');
         const apiData: ApiCategory[] = response.data.data;
         setApiCategories(apiData);
-
         // Merge API categories with initial categories, avoiding duplicates
         setCategories(prev => {
           const newCategories = apiData
@@ -266,7 +267,7 @@ console.log("Creating category:", newCategoryName);
         name: newCategoryName,
       });
 console.log("Create category response:", response);
-return
+
       if (response.status === 200) {
         setCategories([...categories, {
           name: newCategoryName,
@@ -319,6 +320,8 @@ return
     return `Showing ${count} ${categoryDisplayName.toLowerCase()} items`;
   };
 
+  console.log("categories", categories);
+
   return (
     <div className="space-y-6">
       {/* Header Section */}
@@ -332,12 +335,12 @@ return
           </p>
         </div>
         <div className="flex gap-3">
-            <Button 
-            variant="outline"
-            onClick={handleCreateCategory}
-          >
-            Create Category
-          </Button>
+              {/* <Button 
+              variant="outline"
+              onClick={handleCreateCategory}
+            >
+              Create Category
+            </Button> */}
           <Button 
             variant="outline"
             onClick={handleCreateMenu}
@@ -362,7 +365,7 @@ return
               <CardTitle className="text-lg">Categories</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              {categories.map((category, index) => (
+              {categories?.map((category, index) => (
                 <div
                   key={index}
                   onClick={() => handleCategoryClick(category.name)}
@@ -507,6 +510,7 @@ return
         mode={modalMode}
         editItem={editingItem}
         onSubmit={handleModalSubmit}
+        categories={categories.map(cat => cat.name)}
       />
 
       {/* Create Menu Modal */}
