@@ -3,4 +3,5 @@ const USER_ROLE ={
     CANTEEN_MANAGER: "CanteenManager",
     STAFF: "Staff"
 }
+
 export default USER_ROLE;

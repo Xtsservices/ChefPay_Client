@@ -26,8 +26,11 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { apiGet, apiPost } from "@/api/apis";
+import { useSelector } from "react-redux";
+import { AppState } from "@/store/storeTypes";
 
 interface Category {
+  id: number;
   name: string;
   count: number;
   active: boolean;
@@ -36,12 +39,20 @@ interface Category {
 interface MenuItem {
   id: number;
   name: string;
-  category: string;
-  price: number;
-  isVeg: boolean;
   description: string;
+  price: number;
+  categoryId: number;
+  categoryName: string;
+  foodType: "veg" | "non-veg";
+  isVeg: boolean;
   image: string;
+  canteenId: number;
+  canteenName: string;
+  status: number;
+  createdAt: string;
+  updatedAt: string;
 }
+
 interface ApiCategory {
   id: number;
   name: string;
@@ -52,153 +63,71 @@ interface ApiCategory {
 }
 
 const ItemsList: React.FC = () => {
+  const currentUserData = useSelector((state: AppState) => state.currentUserData);
+
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-  const [isCreateMenuModalOpen, setIsCreateMenuModalOpen] =
-    useState<boolean>(false);
-  const [isCreateCategoryModalOpen, setIsCreateCategoryModalOpen] =
-    useState<boolean>(false);
+  const [isCreateMenuModalOpen, setIsCreateMenuModalOpen] = useState<boolean>(false);
+  const [isCreateCategoryModalOpen, setIsCreateCategoryModalOpen] = useState<boolean>(false);
   const [modalMode, setModalMode] = useState<"add" | "edit">("add");
+  const [items, setItems] = useState<MenuItem[]>([]);
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>("home");
-
   const [newCategoryName, setNewCategoryName] = useState<string>("");
   const [categories, setCategories] = useState<Category[]>([
-    { name: "Home", count: 0, active: true },
-    { name: "Tiffins", count: 0, active: false },
-    { name: "Lunch", count: 0, active: false },
-    { name: "Beverages", count: 0, active: false },
-    { name: "Snacks", count: 0, active: false },
-    { name: "Desserts", count: 0, active: false },
+    // Initialize with Home category
+    {
+      id: 0,
+      name: "Home",
+      count: 0,
+      active: true,
+    }
   ]);
-
   const [apiCategories, setApiCategories] = useState<ApiCategory[]>([]);
+  const [toast, setToast] = useState(null);
 
-  const menuItems: MenuItem[] = [
-    {
-      id: 1,
-      name: "Chicken Biryani",
-      category: "lunch",
-      price: 299,
-      isVeg: false,
-      description: "Aromatic basmati rice cooked with tender chicken",
-      image:
-        "https://www.licious.in/blog/wp-content/uploads/2022/06/chicken-hyderabadi-biryani-01-750x750.jpg",
-    },
-    {
-      id: 2,
-      name: "Paneer Butter Masala",
-      category: "lunch",
-      price: 249,
-      isVeg: true,
-      description:
-        "Creamy tomato-based curry with soft paneer cubes and aromatic",
-      image:
-        "https://www.licious.in/blog/wp-content/uploads/2022/06/chicken-hyderabadi-biryani-01-750x750.jpg",
-    },
-    {
-      id: 3,
-      name: "Masala Chai",
-      category: "beverages",
-      price: 25,
-      isVeg: true,
-      description: "Traditional Indian spiced tea with cardamom, cloves and",
-      image:
-        "https://www.licious.in/blog/wp-content/uploads/2022/06/chicken-hyderabadi-biryani-01-750x750.jpg",
-    },
-    {
-      id: 4,
-      name: "Masala Dosa",
-      category: "tiffins",
-      price: 120,
-      isVeg: true,
-      description: "Crispy rice crepe filled with spiced potato mixture",
-      image:
-        "https://www.licious.in/blog/wp-content/uploads/2022/06/chicken-hyderabadi-biryani-01-750x750.jpg",
-    },
-    {
-      id: 5,
-      name: "Chocolate Brownie",
-      category: "desserts",
-      price: 150,
-      isVeg: true,
-      description:
-        "Rich chocolate brownie served warm with vanilla ice cream and",
-      image:
-        "https://www.licious.in/blog/wp-content/uploads/2022/06/chicken-hyderabadi-biryani-01-750x750.jpg",
-    },
-    {
-      id: 6,
-      name: "Vegetable Samosa",
-      category: "snacks",
-      price: 45,
-      isVeg: true,
-      description:
-        "Crispy pastry filled with spiced potatoes and peas, served with",
-      image:
-        "https://www.licious.in/blog/wp-content/uploads/2022/06/chicken-hyderabadi-biryani-01-750x750.jpg",
-    },
-    {
-      id: 7,
-      name: "Mango Lassi",
-      category: "beverages",
-      price: 80,
-      isVeg: true,
-      description:
-        "Refreshing yogurt-based drink blended with fresh mango pulp and",
-      image:
-        "https://www.licious.in/blog/wp-content/uploads/2022/06/chicken-hyderabadi-biryani-01-750x750.jpg",
-    },
-    {
-      id: 8,
-      name: "Butter Chicken",
-      category: "lunch",
-      price: 320,
-      isVeg: false,
-      description: "Tender chicken in rich cashew and herbs",
-      image:
-        "https://www.licious.in/blog/wp-content/uploads/2022/06/chicken-hyderabadi-biryani-01-750x750.jpg",
-    },
-    {
-      id: 9,
-      name: "Vada Pav",
-      category: "home",
-      price: 35,
-      isVeg: true,
-      description: "Mumbai's favorite street food with potato fritters",
-      image:
-        "https://www.licious.in/blog/wp-content/uploads/2022/06/chicken-hyderabadi-biryani-01-750x750.jpg",
-    },
-    {
-      id: 10,
-      name: "Idli Sambar",
-      category: "home",
-      price: 60,
-      isVeg: true,
-      description: "Steamed rice cakes served with lentil curry",
-      image:
-        "https://www.licious.in/blog/wp-content/uploads/2022/06/chicken-hyderabadi-biryani-01-750x750.jpg",
-    },
-    {
-      id: 11,
-      name: "Poha",
-      category: "home",
-      price: 40,
-      isVeg: true,
-      description: "Traditional flattened rice breakfast with vegetables",
-      image:
-        "https://www.licious.in/blog/wp-content/uploads/2022/06/chicken-hyderabadi-biryani-01-750x750.jpg",
-    },
-    {
-      id: 12,
-      name: "Upma",
-      category: "home",
-      price: 45,
-      isVeg: true,
-      description: "Savory semolina porridge with vegetables and spices",
-      image:
-        "https://www.licious.in/blog/wp-content/uploads/2022/06/chicken-hyderabadi-biryani-01-750x750.jpg",
-    },
-  ];
+  const showToast = (title, description, variant = "default") => {
+    setToast({ title, description, variant });
+    setTimeout(() => setToast(null), 4000);
+  };
+
+  const fetchItems = async () => {
+    try {
+      const response = await apiGet(`/items/getItemsByCanteen/${currentUserData.canteenId}`);
+      console.log(response, " items fetched");
+      if (response.status === 200) {
+        setItems(response.data.data);
+      } else {
+        console.error("Failed to fetch items:", response);
+      }
+    } catch (error) {
+      console.error("Error fetching items:", error);
+    }
+  };
+
+  // Calculate category counts dynamically
+  const getCategoryCount = (categoryName: string): number => {
+    if (categoryName.toLowerCase() === "home") {
+      return items?.length || 0; // Show all items for "Home"
+    }
+    return items?.filter(
+      (item) => item?.categoryName?.toLowerCase() === categoryName?.toLowerCase()
+    ).length || 0;
+  };
+
+  const fetchMenuByCanteenID = async () => {
+    try {
+      const response = await apiGet(`/menus/getMenuByCanteenID/${currentUserData.canteenId}`);
+      console.log(response, " menu fetched");
+      if (response.status === 200) {
+        // Handle menu data if needed
+      } else {
+        console.error("Failed to fetch menu:", response);
+      }
+    } catch (error) {
+      console.error("Error fetching menu:", error);
+    }
+  };
+
 
   // Fetch categories from API
   useEffect(() => {
@@ -208,87 +137,52 @@ const ItemsList: React.FC = () => {
         console.log(response);
         const apiData: ApiCategory[] = response.data.data;
         setApiCategories(apiData);
-        // Merge API categories with initial categories, avoiding duplicates
-        setCategories((prev) => {
-          const newCategories = apiData
-            .filter(
-              (apiCat) =>
-                !prev.some(
-                  (cat) => cat.name.toLowerCase() === apiCat.name.toLowerCase()
-                )
-            )
-            .map((apiCat) => ({
-              name: apiCat.name,
-              count: 0,
-              active: false,
-            }));
-          return [...prev, ...newCategories];
-        });
+        
+        // Create categories from API data, excluding duplicates
+        const newCategories = apiData
+          .filter(
+            (apiCat) =>
+              !categories.some(
+                (cat) => cat.name.toLowerCase() === apiCat.name.toLowerCase()
+              )
+          )
+          .map((apiCat) => ({
+            id: apiCat.id,
+            name: apiCat.name,
+            count: 0, // Will be calculated dynamically
+            active: false,
+          }));
+
+        // Merge with existing categories (including Home)
+        setCategories((prev) => [...prev, ...newCategories]);
       } catch (error) {
         console.error("Error fetching categories:", error);
       }
     };
-    fetchCategories();
-  }, []);
 
-  // Calculate category counts dynamically
-  const getCategoryCount = (categoryName: string): number => {
-    if (categoryName.toLowerCase() === "home") {
-      return menuItems.length; // Show all items for "Home"
+    if (!currentUserData) {
+      return;
     }
-    return menuItems.filter(
-      (item) => item.category.toLowerCase() === categoryName.toLowerCase()
-    ).length;
-  };
 
-  // Update category counts
+    fetchCategories();
+    fetchItems();
+    fetchMenuByCanteenID();
+  }, [currentUserData]);
+
+  // Update category counts and active state whenever items or selectedCategory changes
   const updatedCategories = categories.map((category) => ({
     ...category,
     count: getCategoryCount(category.name),
     active: selectedCategory === category.name.toLowerCase(),
   }));
 
-  // Generate categories with dynamic counts
-  const categories2: Category[] = [
-    {
-      name: "Home",
-      count: getCategoryCount("home"),
-      active: selectedCategory === "home",
-    },
-    {
-      name: "Tiffins",
-      count: getCategoryCount("tiffins"),
-      active: selectedCategory === "tiffins",
-    },
-    {
-      name: "Lunch",
-      count: getCategoryCount("lunch"),
-      active: selectedCategory === "lunch",
-    },
-    {
-      name: "Beverages",
-      count: getCategoryCount("beverages"),
-      active: selectedCategory === "beverages",
-    },
-    {
-      name: "Snacks",
-      count: getCategoryCount("snacks"),
-      active: selectedCategory === "snacks",
-    },
-    {
-      name: "Desserts",
-      count: getCategoryCount("desserts"),
-      active: selectedCategory === "desserts",
-    },
-  ];
-
   // Filter menu items based on selected category
   const filteredMenuItems =
     selectedCategory === "home"
-      ? menuItems // Show all items for "Home"
-      : menuItems.filter(
+      ? items // Show all items for "Home"
+      : items.filter(
           (item) =>
-            item.category.toLowerCase() === selectedCategory.toLowerCase()
+            item.categoryName.toLowerCase() === selectedCategory.toLowerCase()
         );
 
   const handleCategoryClick = (categoryName: string): void => {
@@ -315,9 +209,7 @@ const ItemsList: React.FC = () => {
     setIsCreateCategoryModalOpen(true);
   };
 
-  const handleCreateCategorySubmit = async (
-    e: React.FormEvent
-  ): Promise<void> => {
+  const handleCreateCategorySubmit = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
     console.log("Submitting new category:", newCategoryName);
     if (!newCategoryName.trim()) {
@@ -331,13 +223,15 @@ const ItemsList: React.FC = () => {
       });
 
       if (response.status === 200) {
-        setCategories([
-          ...categories,
+        // Add new category to the list
+        setCategories((prev) => [
+          ...prev,
           {
+            id: response.data.id,
             name: newCategoryName,
             count: 0,
             active: false,
-          },
+          }
         ]);
         setNewCategoryName("");
         setIsCreateCategoryModalOpen(false);
@@ -353,30 +247,48 @@ const ItemsList: React.FC = () => {
     }
   };
 
-  const handleModalSubmit = (formData: any): void => {
+  const handleModalSubmit = async (formData: any): Promise<void> => {
     if (modalMode === "add") {
       console.log("Adding new item:", formData);
-      // Add logic to add new item
-      // You might want to update your menuItems state here
+      try {
+        const response = await apiPost("/items/createItem", formData);
+        console.log("Response from API:", response);
+        if (response.status === 201) {
+          fetchItems(); // Refresh items to update counts
+          showToast("Success", "Item created successfully", "success");
+          setIsModalOpen(false);
+        } else {
+          showToast("Error", "Failed to create item", "destructive");
+        }
+        console.log("Item created successfully:", response);
+      } catch (error) {
+        console.error("Error creating item:", error);
+        showToast("Error", "Failed to create item", "destructive");
+      }
     } else {
       console.log("Updating item:", editingItem?.id, formData);
       // Add logic to update existing item
-      // You might want to update your menuItems state here
     }
   };
 
-  const handleCreateMenuSubmit = (menuData: any): void => {
+  const handleCreateMenuSubmit = async (menuData: any): void => {
     menuData.canteenId = 1;
     console.log("Creating new menu:", menuData);
+    const response = await apiPost("/menus/createMenu", menuData);
+    console.log("Response from API:", response);
+    if (response.status === 201) {
+      showToast("Success", "Menu created successfully", "success");
+      setIsCreateMenuModalOpen(false);
+    } else {
+      showToast("Error", "Failed to create menu", "destructive");
+    } 
     // Add logic to handle menu creation
-    // You might want to send this data to your backend
   };
 
   const getActiveItemsText = (): string => {
     const count = filteredMenuItems.length;
     const categoryDisplayName =
-      categories.find((cat) => cat.name.toLowerCase() === selectedCategory)
-        ?.name || selectedCategory;
+      categories.find((cat) => cat.name.toLowerCase() === selectedCategory)?.name || selectedCategory;
 
     if (selectedCategory === "home") {
       return `Showing all ${count} items`;
@@ -399,15 +311,10 @@ const ItemsList: React.FC = () => {
           </p>
         </div>
         <div className="flex gap-3">
-
-          <Button variant="outline" onClick={handleCreateCategory}>
-            Create Category
-          </Button>
-            
           <Button variant="outline" onClick={handleCreateMenu}>
+            <Plus className="h-4 w-4 mr-2" />
             Create Menu
           </Button>
-            
           <Button className="bg-gradient-primary" onClick={handleAddItem}>
             <Plus className="h-4 w-4 mr-2" />
             Add Item
@@ -423,7 +330,7 @@ const ItemsList: React.FC = () => {
               <CardTitle className="text-lg">Categories</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              {categories?.map((category, index) => (
+              {updatedCategories?.map((category, index) => (
                 <div
                   key={index}
                   onClick={() => handleCategoryClick(category.name)}
@@ -488,9 +395,6 @@ const ItemsList: React.FC = () => {
 
                       {/* Hover Actions */}
                       <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-2">
-                        <Button size="sm" variant="secondary">
-                          <Eye className="h-4 w-4" />
-                        </Button>
                         <Button
                           size="sm"
                           variant="secondary"
@@ -511,7 +415,7 @@ const ItemsList: React.FC = () => {
                           {item.name}
                         </h3>
                         <p className="text-sm text-muted-foreground capitalize">
-                          {item.category}
+                          {item.categoryName}
                         </p>
                       </div>
 
@@ -524,14 +428,14 @@ const ItemsList: React.FC = () => {
                           ₹{item.price}
                         </span>
                         <Badge
-                          variant={item.isVeg ? "default" : "destructive"}
+                          variant={item.foodType === "veg" ? "default" : "destructive"}
                           className={`${
-                            item.isVeg
+                            item.foodType === "veg"
                               ? "bg-green-100 text-green-800 hover:bg-green-200"
                               : "bg-red-100 text-red-800 hover:bg-red-200"
                           }`}
                         >
-                          {item.isVeg ? "Veg" : "Non-Veg"}
+                          {item.foodType === "veg" ? "Veg" : "Non-Veg"}
                         </Badge>
                       </div>
                     </div>
@@ -571,16 +475,32 @@ const ItemsList: React.FC = () => {
         mode={modalMode}
         editItem={editingItem}
         onSubmit={handleModalSubmit}
-        categories={categories.map(cat => cat.name)}
+        categories={categories}
       />
 
       {/* Create Menu Modal */}
       <CreateMenuModal
         open={isCreateMenuModalOpen}
         onOpenChange={setIsCreateMenuModalOpen}
-        menuItems={menuItems}
+        menuItems={items}
         onSubmit={handleCreateMenuSubmit}
+        categories={categories}
+
       />
+
+      {/* Toast Notification */}
+      {toast && (
+        <div
+          className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg backdrop-blur-md transform transition-all duration-300 ${
+            toast.variant === "destructive"
+              ? "bg-red-500/20 border border-red-500/30 text-red-100"
+              : "bg-green-500/20 border border-green-500/30 text-green-100"
+          }`}
+        >
+          <h4 className="font-semibold">{toast.title}</h4>
+          <p className="text-sm opacity-90">{toast.description}</p>
+        </div>
+      )}
 
       {/* Create Category Modal */}
       <Dialog

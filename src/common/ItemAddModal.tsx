@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useSelector } from "react-redux";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,22 +7,28 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Upload, AlertCircle } from "lucide-react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
+
+interface AppState {
+  currentUserData: {
+    canteenId: number;
+  };
+}
 
 interface FormData {
-  itemName: string;
+  name: string;
   description: string;
-  category: string;
-  foodType: "vegetarian" | "non-vegetarian";
-  price: string;
-  image: File | null;
+  categoryId: string; // String for form handling, will convert to number
+  foodType: "veg" | "non-veg";
+  price: string; // String in form, will convert to number
+  image: string;
+  canteenId: number;
 }
 
 interface FormErrors {
-  itemName?: string;
+  name?: string;
   description?: string;
-  category?: string;
+  categoryId?: string;
   price?: string;
   image?: string;
 }
@@ -29,11 +36,18 @@ interface FormErrors {
 interface MenuItem {
   id?: number;
   name: string;
-  category: string;
+  category: string; // Assumed to be category name
   price: number;
   isVeg: boolean;
   description: string;
   image: string;
+}
+
+interface Category {
+  id: number;
+  name: string;
+  count?: number;
+  active?: boolean;
 }
 
 interface ItemAddModalProps {
@@ -41,71 +55,79 @@ interface ItemAddModalProps {
   onOpenChange: (open: boolean) => void;
   mode: "add" | "edit";
   editItem?: MenuItem | null;
-  onSubmit?: (data: FormData) => void;
-  categories: string[];
+  onSubmit?: (data: {
+    name: string;
+    description: string;
+    price: number;
+    categoryId: number;
+    foodType: "veg" | "non-veg";
+    image: string;
+    canteenId: number;
+  }) => void;
+  categories: Category[];
 }
 
-const ItemAddModal: React.FC<ItemAddModalProps> = ({ 
-  open, 
-  onOpenChange, 
-  mode = "add", 
+const ItemAddModal: React.FC<ItemAddModalProps> = ({
+  open,
+  onOpenChange,
+  mode = "add",
   editItem = null,
-  onSubmit ,
-  categories
+  onSubmit,
+  categories,
 }) => {
+  const currentUserData = useSelector((state: AppState) => state.currentUserData);
+  const canteenId = currentUserData?.canteenId || 0;
+
   const [formData, setFormData] = useState<FormData>({
-    itemName: "",
+    name: "",
     description: "",
-    category: "",
-    foodType: "vegetarian",
+    categoryId: "",
+    foodType: "veg",
     price: "",
-    image: null
+    image: "",
+    canteenId,
   });
 
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // const categories: string[] = [
-  //   "Home",
-  //   "Tiffins", 
-  //   "Lunch",
-  //   "Beverages",
-  //   "Snacks",
-  //   "Desserts"
-  // ];
-
   // Populate form data when editing
   useEffect(() => {
     if (mode === "edit" && editItem) {
+      // Map category name to categoryId
+      const selectedCategory = categories.find(
+        (cat) => cat.name.toLowerCase() === editItem.category.toLowerCase()
+      );
       setFormData({
-        itemName: editItem.name,
+        name: editItem.name,
         description: editItem.description,
-        category: editItem.category.toLowerCase(),
-        foodType: editItem.isVeg ? "vegetarian" : "non-vegetarian",
+        categoryId: selectedCategory ? selectedCategory.id.toString() : "",
+        foodType: editItem.isVeg ? "veg" : "non-veg",
         price: editItem.price.toString(),
-        image: null // Reset image for edit mode
+        image: editItem.image,
+        canteenId,
       });
     } else if (mode === "add") {
       // Reset form for add mode
       setFormData({
-        itemName: "",
+        name: "",
         description: "",
-        category: "",
-        foodType: "vegetarian",
+        categoryId: "",
+        foodType: "veg",
         price: "",
-        image: null
+        image: "",
+        canteenId,
       });
     }
     // Clear errors when modal opens/mode changes
     setErrors({});
-  }, [mode, editItem, open]);
+  }, [mode, editItem, open, canteenId, categories]);
 
   // Validation functions
   const validateItemName = (value: string): string | undefined => {
     if (!value.trim()) return "Item name is required";
     if (value.trim().length < 2) return "Item name must be at least 2 characters";
     if (value.trim().length > 50) return "Item name must not exceed 50 characters";
-    // Check if contains only numbers
     if (/^\d+$/.test(value.trim())) return "Item name cannot contain only numbers";
     return undefined;
   };
@@ -119,6 +141,9 @@ const ItemAddModal: React.FC<ItemAddModalProps> = ({
 
   const validateCategory = (value: string): string | undefined => {
     if (!value) return "Category is required";
+    if (!categories.some((cat) => cat.id.toString() === value)) {
+      return "Selected category is invalid";
+    }
     return undefined;
   };
 
@@ -131,13 +156,11 @@ const ItemAddModal: React.FC<ItemAddModalProps> = ({
     return undefined;
   };
 
-  const validateImage = (file: File | null): string | undefined => {
-    if (mode === "add" && !file) return "Image is required";
-    if (file) {
-      // Check file type
-      if (!file.type.startsWith('image/')) return "Please select a valid image file";
-      // Check file size (2MB = 2 * 1024 * 1024 bytes)
-      if (file.size > 2 * 1024 * 1024) return "Image size must not exceed 2MB";
+  const validateImage = (url: string): string | undefined => {
+    if (mode === "add" && !url.trim()) return "Image URL is required";
+    if (url.trim()) {
+      const urlPattern = /^(https?:\/\/.*\.(?:png|jpg))$/i;
+      if (!urlPattern.test(url.trim())) return "Please enter a valid image URL (png, jpg)";
     }
     return undefined;
   };
@@ -145,14 +168,14 @@ const ItemAddModal: React.FC<ItemAddModalProps> = ({
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
 
-    newErrors.itemName = validateItemName(formData.itemName);
+    newErrors.name = validateItemName(formData.name);
     newErrors.description = validateDescription(formData.description);
-    newErrors.category = validateCategory(formData.category);
+    newErrors.categoryId = validateCategory(formData.categoryId);
     newErrors.price = validatePrice(formData.price);
     newErrors.image = validateImage(formData.image);
 
     // Remove undefined errors
-    Object.keys(newErrors).forEach(key => {
+    Object.keys(newErrors).forEach((key) => {
       if (!newErrors[key as keyof FormErrors]) {
         delete newErrors[key as keyof FormErrors];
       }
@@ -162,86 +185,76 @@ const ItemAddModal: React.FC<ItemAddModalProps> = ({
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleInputChange = (field: keyof FormData, value: string | File | null): void => {
-    setFormData(prev => ({
+  const handleInputChange = (field: keyof FormData, value: string): void => {
+    setFormData((prev) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
 
     // Clear specific field error when user starts typing
     if (errors[field as keyof FormErrors]) {
-      setErrors(prev => ({
+      setErrors((prev) => ({
         ...prev,
-        [field]: undefined
+        [field]: undefined,
       }));
     }
   };
 
   const handleItemNameChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
     const value = e.target.value;
-    // Prevent input if it's only numbers
     if (!/^\d+$/.test(value) || value === "") {
-      handleInputChange("itemName", value);
+      handleInputChange("name", value);
     }
   };
 
   const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
     const value = e.target.value;
-    // Allow only numbers and decimal point
     if (/^\d*\.?\d*$/.test(value) || value === "") {
       handleInputChange("price", value);
     }
   };
 
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>): void => {
-    const file = event.target.files?.[0];
-    if (file) {
-      const imageError = validateImage(file);
-      if (imageError) {
-        setErrors(prev => ({ ...prev, image: imageError }));
-        return;
-      }
-      setFormData(prev => ({
-        ...prev,
-        image: file
-      }));
-      // Clear image error
-      if (errors.image) {
-        setErrors(prev => ({ ...prev, image: undefined }));
-      }
-    }
-  };
-
   const resetForm = (): void => {
     setFormData({
-      itemName: "",
+      name: "",
       description: "",
-      category: "",
-      foodType: "vegetarian",
+      categoryId: "",
+      foodType: "veg",
       price: "",
-      image: null
+      image: "",
+      canteenId,
     });
     setErrors({});
   };
 
   const handleSubmit = async (): Promise<void> => {
     if (isSubmitting) return;
-    
+
     setIsSubmitting(true);
-    
+
     if (!validateForm()) {
       setIsSubmitting(false);
       return;
     }
 
     try {
-      // Handle form submission
+      // Prepare payload for API
+      const payload = {
+        name: formData.name.trim(),
+        description: formData.description.trim(),
+        price: parseFloat(formData.price),
+        categoryId: parseInt(formData.categoryId),
+        foodType: formData.foodType,
+        image: formData.image.trim(),
+        canteenId: formData.canteenId,
+      };
+
       if (onSubmit) {
-        await onSubmit(formData);
+        await onSubmit(payload);
       }
-      
-      console.log(`${mode === "add" ? "Adding" : "Updating"} item:`, formData);
-      
+
+      console.log(`${mode === "add" ? "Adding" : "Updating"} item:`, payload);
+
       // Reset form and close modal
       resetForm();
       onOpenChange(false);
@@ -277,22 +290,22 @@ const ItemAddModal: React.FC<ItemAddModalProps> = ({
             <div className="px-6 py-6 space-y-4">
               {/* Item Name */}
               <div className="space-y-2">
-                <Label htmlFor="itemName" className="text-sm font-medium text-gray-700">
+                <Label htmlFor="name" className="text-sm font-medium text-gray-700">
                   Item Name <span className="text-red-500">*</span>
                 </Label>
                 <Input
-                  id="itemName"
+                  id="name"
                   placeholder="Enter item name"
-                  value={formData.itemName}
+                  value={formData.name}
                   onChange={handleItemNameChange}
                   className={`w-full text-gray-900 bg-white/80 backdrop-blur-sm border-gray-300 ${
-                    errors.itemName ? 'border-red-500 focus:border-red-500' : ''
+                    errors.name ? "border-red-500 focus:border-red-500" : ""
                   }`}
                 />
-                {errors.itemName && (
+                {errors.name && (
                   <p className="text-sm text-red-500 flex items-center gap-1">
                     <AlertCircle className="h-4 w-4" />
-                    {errors.itemName}
+                    {errors.name}
                   </p>
                 )}
               </div>
@@ -308,7 +321,7 @@ const ItemAddModal: React.FC<ItemAddModalProps> = ({
                   value={formData.description}
                   onChange={(e) => handleInputChange("description", e.target.value)}
                   className={`w-full text-gray-900 min-h-[80px] resize-none bg-white/80 backdrop-blur-sm border-gray-300 ${
-                    errors.description ? 'border-red-500 focus:border-red-500' : ''
+                    errors.description ? "border-red-500 focus:border-red-500" : ""
                   }`}
                 />
                 <div className="flex justify-between items-center">
@@ -330,27 +343,35 @@ const ItemAddModal: React.FC<ItemAddModalProps> = ({
                 <Label className="text-sm font-medium text-gray-700">
                   Category <span className="text-red-500">*</span>
                 </Label>
-                <Select 
-                  value={formData.category} 
-                  onValueChange={(value) => handleInputChange("category", value)}
+                <Select
+                  value={formData.categoryId}
+                  onValueChange={(value) => handleInputChange("categoryId", value)}
                 >
-                  <SelectTrigger className={`w-full text-gray-900 bg-white/80 backdrop-blur-sm border-gray-300 ${
-                    errors.category ? 'border-red-500 focus:border-red-500' : ''
-                  }`}>
+                  <SelectTrigger
+                    className={`w-full text-gray-900 bg-white/80 backdrop-blur-sm border-gray-300 ${
+                      errors.categoryId ? "border-red-500 focus:border-red-500" : ""
+                    }`}
+                  >
                     <SelectValue placeholder="Select category" />
                   </SelectTrigger>
                   <SelectContent className="bg-white/95 text-gray-900 backdrop-blur-sm">
-                    {categories?.map((category) => (
-                      <SelectItem key={category} value={category ? category.toLowerCase() : ''}>
-                        {category}
+                    {categories.length > 0 ? (
+                      categories.map((category) => (
+                        <SelectItem key={category.id} value={category.id.toString()}>
+                          {category.name}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <SelectItem value="" disabled>
+                        No categories available
                       </SelectItem>
-                    ))}
+                    )}
                   </SelectContent>
                 </Select>
-                {errors.category && (
+                {errors.categoryId && (
                   <p className="text-sm text-red-500 flex items-center gap-1">
                     <AlertCircle className="h-4 w-4" />
-                    {errors.category}
+                    {errors.categoryId}
                   </p>
                 )}
               </div>
@@ -364,18 +385,18 @@ const ItemAddModal: React.FC<ItemAddModalProps> = ({
                   </Label>
                   <RadioGroup
                     value={formData.foodType}
-                    onValueChange={(value: "vegetarian" | "non-vegetarian") => handleInputChange("foodType", value)}
+                    onValueChange={(value: "veg" | "non-veg") => handleInputChange("foodType", value)}
                     className="flex flex-col sm:flex-row gap-3"
                   >
                     <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="vegetarian" id="vegetarian" className="text-green-600" />
-                      <Label htmlFor="vegetarian" className="text-sm text-green-600 font-medium cursor-pointer">
+                      <RadioGroupItem value="veg" id="veg" className="text-green-600" />
+                      <Label htmlFor="veg" className="text-sm text-green-600 font-medium cursor-pointer">
                         Vegetarian
                       </Label>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="non-vegetarian" id="non-vegetarian" className="text-red-600" />
-                      <Label htmlFor="non-vegetarian" className="text-sm text-red-600 font-medium cursor-pointer">
+                      <RadioGroupItem value="non-veg" id="non-veg" className="text-red-600" />
+                      <Label htmlFor="non-veg" className="text-sm text-red-600 font-medium cursor-pointer">
                         Non-Vegetarian
                       </Label>
                     </div>
@@ -394,7 +415,7 @@ const ItemAddModal: React.FC<ItemAddModalProps> = ({
                     value={formData.price}
                     onChange={handlePriceChange}
                     className={`w-full text-gray-900 bg-white/80 backdrop-blur-sm border-gray-300 ${
-                      errors.price ? 'border-red-500 focus:border-red-500' : ''
+                      errors.price ? "border-red-500 focus:border-red-500" : ""
                     }`}
                   />
                   {errors.price && (
@@ -406,65 +427,31 @@ const ItemAddModal: React.FC<ItemAddModalProps> = ({
                 </div>
               </div>
 
-              {/* Upload Image */}
+              {/* Image URL */}
               <div className="space-y-2">
-                <Label className="text-sm font-medium text-gray-700">
-                  Upload Image <span className="text-red-500">*</span>
-                  <span className="text-xs text-gray-500 ml-1">(Max 2MB)</span>
+                <Label htmlFor="image-url" className="text-sm font-medium text-gray-700">
+                  Image URL <span className="text-red-500">*</span>
                 </Label>
-                <div className={`border-2 border-dashed rounded-lg p-6 text-center hover:border-gray-400/60 transition-colors bg-white/40 backdrop-blur-sm ${
-                  errors.image ? 'border-red-500/60' : 'border-gray-300/60'
-                }`}>
-                  {formData.image ? (
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-center text-green-600">
-                        <Upload className="h-6 w-6" />
-                      </div>
-                      <p className="text-sm text-gray-600">{formData.image.name}</p>
-                      <p className="text-xs text-gray-500">
-                        {(formData.image.size / (1024 * 1024)).toFixed(2)} MB
-                      </p>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleInputChange("image", null)}
-                        className="bg-white/80 text-gray-500 backdrop-blur-sm"
-                      >
-                        Remove
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-center text-gray-400">
-                        <Upload className="h-8 w-8" />
-                      </div>
-                      <p className="text-sm text-gray-500">Click to browse files (Max 2MB)</p>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleImageUpload}
-                        className="hidden"
-                        id="image-upload"
-                      />
-                      <Label
-                        htmlFor="image-upload"
-                        className="inline-block px-4 py-2 text-sm text-blue-600 bg-blue-50/80 backdrop-blur-sm rounded-md cursor-pointer hover:bg-blue-100/80 transition-colors"
-                      >
-                        Choose File
-                      </Label>
-                    </div>
-                  )}
-                </div>
+                <Input
+                  id="image-url"
+                  type="text"
+                  placeholder="Enter image URL (png, jpg)"
+                  value={formData.image}
+                  onChange={(e) => handleInputChange("image", e.target.value)}
+                  className={`w-full text-gray-900 bg-white/80 backdrop-blur-sm border-gray-300 ${
+                    errors.image ? "border-red-500 focus:border-red-500" : ""
+                  }`}
+                />
                 {errors.image && (
                   <p className="text-sm text-red-500 flex items-center gap-1">
                     <AlertCircle className="h-4 w-4" />
                     {errors.image}
                   </p>
                 )}
-                {mode === "edit" && editItem?.image && !formData.image && (
-                  <div className="mt-2">
-                    <p className="text-xs text-gray-500">Current image will be kept if no new image is uploaded</p>
-                  </div>
+                {mode === "edit" && editItem?.image && formData.image === editItem.image && (
+                  <p className="text-xs text-gray-500">
+                    Current image URL will be kept if not changed
+                  </p>
                 )}
               </div>
             </div>

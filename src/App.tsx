@@ -31,13 +31,13 @@ const App = () => {
 
   const getCurrentUser = async () => {
     try {
-      const userData = await apiGet("/getProfile");
+      const userData = await apiGet("/user/getUser");
 
       console.log("userDatap", userData);
 
       if (userData?.data) {
         console.log("userData====dispatch", userData.data);
-        const role = userData.data.data.userRoles[0].role.name;
+        const role = userData.data.role;
         
         console.log("userDatarole", role);
 

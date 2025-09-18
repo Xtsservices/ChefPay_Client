@@ -8,42 +8,52 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Search, X, AlertCircle, Calendar, Clock } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { useSelector } from "react-redux";
+import { AppState } from "@/store/storeTypes";
 
 interface MenuItem {
   id: number;
   name: string;
-  category: string;
-  price: number;
-  isVeg: boolean;
-  description: string;
+  description?: string;
+  price: string | number;
+  categoryId: number;
+  categoryName: string;
+  foodType: "veg" | "non-veg";
   image: string;
+  canteenId: number;
+  canteenName?: string;
+  status: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
 interface Category {
+  id: number;
   name: string;
-  value: string;
+  count?: number;
+  active?: boolean;
 }
 
 interface CreateMenuModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   menuItems: MenuItem[];
+  categories: Category[];
   onSubmit?: (data: CreateMenuData) => void;
 }
 
 interface CreateMenuData {
-  menuName: string;
+  menuName?: string;
   menuType: "daily" | "day-specific";
   selectedDays: string[];
-  selectedCategories: string[];
   selectedItems: number[];
+  canteenId: number;
 }
 
 interface FormErrors {
   menuName?: string;
   menuType?: string;
   days?: string;
-  categories?: string;
   items?: string;
 }
 
@@ -51,30 +61,24 @@ const CreateMenuModal: React.FC<CreateMenuModalProps> = ({
   open,
   onOpenChange,
   menuItems,
+  categories,
   onSubmit
 }) => {
+  // Get current user data from Redux store
+  const currentUserData = useSelector((state: AppState) => state.currentUserData);
+
   const [formData, setFormData] = useState<CreateMenuData>({
     menuName: "",
     menuType: "daily",
     selectedDays: [],
-    selectedCategories: [],
-    selectedItems: []
+    selectedItems: [],
+    canteenId: currentUserData?.canteenId || 1
   });
 
   const [errors, setErrors] = useState<FormErrors>({});
   const [searchTerm, setSearchTerm] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeTab, setActiveTab] = useState<string>("All");
-
-  // Available categories
-  const categories: Category[] = [
-    { name: "All", value: "all" },
-    { name: "Tiffins", value: "tiffins" },
-    { name: "Lunch", value: "lunch" },
-    { name: "Beverages", value: "beverages" },
-    { name: "Snacks", value: "snacks" },
-    { name: "Desserts", value: "desserts" }
-  ];
 
   // Days of the week
   const daysOfWeek = [
@@ -94,16 +98,55 @@ const CreateMenuModal: React.FC<CreateMenuModalProps> = ({
     return dayKeys[today];
   };
 
+  // Calculate category counts dynamically
+  const getCategoryCount = useMemo(() => {
+    return (categoryName: string): number => {
+      if (categoryName === "All") {
+        return menuItems?.length || 0;
+      }
+      return menuItems?.filter(
+        (item) => item.categoryName.toLowerCase() === categoryName.toLowerCase()
+      ).length || 0;
+    };
+  }, [menuItems]);
+
+  // Create dynamic categories from props with "All" as first option and counts
+  const dynamicCategories = useMemo(() => {
+    const allCategory = { 
+      id: 0, 
+      name: "All", 
+      value: "all",
+      count: getCategoryCount("All")
+    };
+    const categoryTabs = categories.map(cat => ({
+      id: cat.id,
+      name: cat.name,
+      value: cat.name.toLowerCase().replace(/\s+/g, '-'),
+      count: getCategoryCount(cat.name)
+    }));
+    return [allCategory, ...categoryTabs];
+  }, [categories, getCategoryCount]);
+
   // Filter items based on active tab and search term
   const filteredItems = useMemo(() => {
     return menuItems.filter(item => {
       const matchesCategory = activeTab === "All" || 
-        item.category.toLowerCase() === activeTab.toLowerCase();
+        item.categoryName.toLowerCase() === activeTab.toLowerCase();
       const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.description.toLowerCase().includes(searchTerm.toLowerCase());
+        (item.description && item.description.toLowerCase().includes(searchTerm.toLowerCase()));
       return matchesCategory && matchesSearch;
     });
   }, [menuItems, activeTab, searchTerm]);
+
+  // Update canteenId when currentUserData changes
+  useEffect(() => {
+    if (currentUserData?.canteenId) {
+      setFormData(prev => ({
+        ...prev,
+        canteenId: currentUserData.canteenId
+      }));
+    }
+  }, [currentUserData]);
 
   // Reset form when modal opens/closes
   useEffect(() => {
@@ -112,14 +155,14 @@ const CreateMenuModal: React.FC<CreateMenuModalProps> = ({
         menuName: "",
         menuType: "daily",
         selectedDays: [],
-        selectedCategories: [],
-        selectedItems: []
+        selectedItems: [],
+        canteenId: currentUserData?.canteenId || 1
       });
       setErrors({});
       setSearchTerm("");
       setActiveTab("All");
     }
-  }, [open]);
+  }, [open, currentUserData]);
 
   // Reset days when menu type changes
   useEffect(() => {
@@ -131,14 +174,6 @@ const CreateMenuModal: React.FC<CreateMenuModalProps> = ({
   // Validation functions
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
-
-    if (!formData.menuName.trim()) {
-      newErrors.menuName = "Menu name is required";
-    } else if (formData.menuName.trim().length < 3) {
-      newErrors.menuName = "Menu name must be at least 3 characters";
-    } else if (formData.menuName.trim().length > 50) {
-      newErrors.menuName = "Menu name must not exceed 50 characters";
-    }
 
     if (formData.menuType === "day-specific" && formData.selectedDays.length === 0) {
       newErrors.days = "Please select at least one day for day-specific menu";
@@ -210,18 +245,27 @@ const CreateMenuModal: React.FC<CreateMenuModalProps> = ({
     }
 
     try {
-      if (onSubmit) {
-        await onSubmit(formData);
-      }
+      // Create the payload without selectedCategories
+      const payload: CreateMenuData = {
+        ...(formData.menuName?.trim() && { menuName: formData.menuName.trim() }),
+        menuType: formData.menuType,
+        selectedDays: formData.selectedDays,
+        selectedItems: formData.selectedItems,
+        canteenId: currentUserData?.canteenId || formData.canteenId
+      };
 
-      console.log("Creating menu:", formData);
+      console.log("Creating menu with payload:", payload);
+
+      if (onSubmit) {
+        await onSubmit(payload);
+      }
       
       setFormData({
         menuName: "",
         menuType: "daily",
         selectedDays: [],
-        selectedCategories: [],
-        selectedItems: []
+        selectedItems: [],
+        canteenId: currentUserData?.canteenId || 1
       });
       setErrors({});
       setSearchTerm("");
@@ -239,8 +283,8 @@ const CreateMenuModal: React.FC<CreateMenuModalProps> = ({
       menuName: "",
       menuType: "daily",
       selectedDays: [],
-      selectedCategories: [],
-      selectedItems: []
+      selectedItems: [],
+      canteenId: currentUserData?.canteenId || 1
     });
     setErrors({});
     setSearchTerm("");
@@ -254,40 +298,71 @@ const CreateMenuModal: React.FC<CreateMenuModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[95vw] w-full h-[95vh] p-0 bg-white border border-gray-200 shadow-2xl rounded-lg overflow-hidden flex flex-col">
+      <DialogContent className="max-w-[95vw] w-full h-[95vh] p-0 bg-white border border-gray-200/20 shadow-2xl rounded-lg overflow-hidden flex flex-col backdrop-blur-md">
         {/* Header - Fixed */}
-        <DialogHeader className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200 flex-shrink-0 bg-white rounded-t-lg">
+        <DialogHeader className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200/20 flex-shrink-0 bg-transparent backdrop-blur-sm rounded-t-lg">
           <DialogTitle className="text-lg sm:text-xl font-semibold text-center text-black">
             Create Menu
           </DialogTitle>
+          {currentUserData?.canteenName && (
+            <p className="text-sm text-gray-600 text-center">
+              For {currentUserData.canteenName}
+            </p>
+          )}
         </DialogHeader>
 
-        {/* Content Area - Main Container */}
-        <div className="flex flex-col lg:flex-row flex-1 min-h-0 overflow-hidden">
-          {/* Left Side - Menu Configuration */}
-          <div className="w-full lg:w-80 lg:border-r border-gray-200 bg-gray-50/50 flex flex-col lg:flex-shrink-0">
+        {/* Main Content Area */}
+        <div className="flex flex-1 min-h-0 overflow-hidden">
+          {/* Left Side - Categories Sidebar */}
+          <div className="w-64 border-r border-gray-200/20 bg-transparent flex-shrink-0">
+            <div className="p-4 border-b border-gray-200/20">
+              <h3 className="text-sm font-semibold text-gray-900 mb-2">Categories</h3>
+            </div>
+            <ScrollArea className="flex-1 h-full">
+              <div className="p-2 space-y-1">
+                {dynamicCategories.map(category => (
+                  <button
+                    key={category.id}
+                    onClick={() => setActiveTab(category.name)}
+                    className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 flex items-center justify-between ${
+                      activeTab === category.name
+                        ? 'bg-blue-500/20 text-blue-700 shadow-sm backdrop-blur-sm border border-blue-300/30'
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100/10 backdrop-blur-sm'
+                    }`}
+                  >
+                    <span>{category.name}</span>
+                    <Badge
+                      variant="secondary"
+                      className={`text-xs transition-all duration-200 ${
+                        activeTab === category.name
+                          ? 'bg-blue-200/50 text-blue-800 border border-blue-300/50'
+                          : 'bg-gray-100/50 text-gray-700 border border-gray-300/30'
+                      }`}
+                    >
+                      {category.count}
+                    </Badge>
+                  </button>
+                ))}
+              </div>
+            </ScrollArea>
+          </div>
+
+          {/* Center - Menu Configuration */}
+          <div className="w-80 border-r border-gray-200/20 bg-transparent flex flex-col flex-shrink-0">
             <ScrollArea className="flex-1 px-4 sm:px-6">
               <div className="py-4 sm:py-6 space-y-4 mb-4">
-                {/* Menu Name Input */}
+                {/* Menu Name Input - Optional */}
                 <div className="space-y-2">
                   <Label htmlFor="menuName" className="text-sm font-medium text-black">
-                    Menu Name <span className="text-red-500">*</span>
+                    Menu Name <span className="text-gray-400">(Optional)</span>
                   </Label>
                   <Input
                     id="menuName"
-                    placeholder="Enter menu name"
+                    placeholder="Enter menu name (optional)"
                     value={formData.menuName}
                     onChange={(e) => handleMenuNameChange(e.target.value)}
-                    className={`w-full text-black bg-white border-gray-300 placeholder:text-gray-500 text-sm ${
-                      errors.menuName ? 'border-red-500 focus:border-red-500' : ''
-                    }`}
+                    className="w-full text-black bg-transparent border-gray-300/50 placeholder:text-gray-500 text-sm backdrop-blur-sm"
                   />
-                  {errors.menuName && (
-                    <p className="text-xs sm:text-sm text-red-500 flex items-center gap-1">
-                      <AlertCircle className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
-                      <span className="break-words">{errors.menuName}</span>
-                    </p>
-                  )}
                 </div>
 
                 {/* Menu Type Selection */}
@@ -300,7 +375,7 @@ const CreateMenuModal: React.FC<CreateMenuModalProps> = ({
                     onValueChange={handleMenuTypeChange}
                     className="space-y-2"
                   >
-                    <div className="flex items-center space-x-2 p-3 border border-gray-200 rounded-lg bg-white">
+                    <div className="flex items-center space-x-2 p-3 border border-gray-200/50 rounded-lg bg-transparent backdrop-blur-sm">
                       <RadioGroupItem value="daily" id="daily" className="flex-shrink-0" />
                       <Label htmlFor="daily" className="flex-1 cursor-pointer">
                         <div className="flex items-center gap-2">
@@ -312,7 +387,7 @@ const CreateMenuModal: React.FC<CreateMenuModalProps> = ({
                         </div>
                       </Label>
                     </div>
-                    <div className="flex items-center space-x-2 p-3 border border-gray-200 rounded-lg bg-white">
+                    <div className="flex items-center space-x-2 p-3 border border-gray-200/50 rounded-lg bg-transparent backdrop-blur-sm">
                       <RadioGroupItem value="day-specific" id="day-specific" className="flex-shrink-0" />
                       <Label htmlFor="day-specific" className="flex-1 cursor-pointer">
                         <div className="flex items-center gap-2">
@@ -337,14 +412,14 @@ const CreateMenuModal: React.FC<CreateMenuModalProps> = ({
                     {/* Selected Days Display */}
                     {formData.selectedDays.length > 0 && (
                       <div className="max-h-16 overflow-y-auto">
-                        <div className="flex flex-wrap gap-1 p-2 bg-white rounded border border-gray-200">
+                        <div className="flex flex-wrap gap-1 p-2 bg-transparent backdrop-blur-sm rounded border border-gray-200/50">
                           {formData.selectedDays.map(dayKey => {
                             const day = daysOfWeek.find(d => d.key === dayKey);
                             return (
                               <Badge
                                 key={dayKey}
                                 variant="secondary"
-                                className="bg-blue-100 text-black border border-blue-200 hover:bg-blue-200 cursor-pointer text-xs"
+                                className="bg-blue-100/50 text-black border border-blue-200/50 hover:bg-blue-200/50 cursor-pointer text-xs backdrop-blur-sm"
                                 onClick={() => removeDay(dayKey)}
                               >
                                 {day?.display}
@@ -357,7 +432,7 @@ const CreateMenuModal: React.FC<CreateMenuModalProps> = ({
                     )}
 
                     {/* Days Grid */}
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    <div className="grid grid-cols-2 gap-2">
                       {daysOfWeek.map(day => {
                         const isToday = getCurrentDay() === day.key;
                         const isSelected = formData.selectedDays.includes(day.key);
@@ -365,7 +440,7 @@ const CreateMenuModal: React.FC<CreateMenuModalProps> = ({
                         return (
                           <div
                             key={day.key}
-                            className="flex items-center space-x-2 p-2 border border-gray-200 rounded hover:bg-gray-50 transition-colors bg-white"
+                            className="flex items-center space-x-2 p-2 border border-gray-200/50 rounded hover:bg-gray-50/20 transition-colors bg-transparent backdrop-blur-sm"
                           >
                             <Checkbox
                               id={`day-${day.key}`}
@@ -399,7 +474,7 @@ const CreateMenuModal: React.FC<CreateMenuModalProps> = ({
                 )}
 
                 {/* Selected Items Count */}
-                <div className="p-3 sm:p-4 bg-blue-50 rounded-lg border border-blue-200">
+                <div className="p-3 sm:p-4 bg-blue-50/30 rounded-lg border border-blue-200/50 backdrop-blur-sm">
                   <div className="text-sm text-black font-medium">
                     Selected Items
                   </div>
@@ -422,64 +497,43 @@ const CreateMenuModal: React.FC<CreateMenuModalProps> = ({
                     <Label className="text-sm font-medium text-black">
                       Selected Items:
                     </Label>
-                    <div className="space-y-1">
-                      {formData.selectedItems.map(itemId => {
-                        const item = menuItems.find(item => item.id === itemId);
-                        return item ? (
-                          <div key={itemId} className="flex items-center justify-between p-2 bg-white rounded border text-xs">
-                            <span className="text-black font-medium truncate flex-1 mr-2">{item.name}</span>
-                            <button
-                              onClick={() => handleItemChange(itemId, false)}
-                              className="text-red-500 hover:text-red-700 flex-shrink-0"
-                            >
-                              <X className="h-3 w-3" />
-                            </button>
-                          </div>
-                        ) : null;
-                      })}
-                    </div>
+                    <ScrollArea className="max-h-48">
+                      <div className="space-y-1">
+                        {formData.selectedItems.map(itemId => {
+                          const item = menuItems.find(item => item.id === itemId);
+                          return item ? (
+                            <div key={itemId} className="flex items-center justify-between p-2 bg-transparent backdrop-blur-sm rounded border border-gray-200/50 text-xs">
+                              <span className="text-black font-medium truncate flex-1 mr-2">{item.name}</span>
+                              <button
+                                onClick={() => handleItemChange(itemId, false)}
+                                className="text-red-500 hover:text-red-700 flex-shrink-0"
+                              >
+                                <X className="h-3 w-3" />
+                              </button>
+                            </div>
+                          ) : null;
+                        })}
+                      </div>
+                    </ScrollArea>
                   </div>
                 )}
-
-                {/* Extra margin bottom to ensure last item is visible */}
-                <div className="h-4"></div>
               </div>
             </ScrollArea>
           </div>
 
           {/* Right Side - Items Selection */}
           <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
-            {/* Search and Tabs - Fixed */}
-            <div className="p-4 sm:p-6 border-b border-gray-200 bg-white flex-shrink-0">
-              {/* Search Bar */}
-              <div className="relative mb-4">
+            {/* Search Bar - Fixed */}
+            <div className="p-4 sm:p-6 border-b border-gray-200/20 bg-transparent flex-shrink-0 backdrop-blur-sm">
+              <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <Input
                   placeholder="Search items..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 text-black bg-white border-gray-300 placeholder:text-gray-500 text-sm"
+                  className="pl-10 text-black bg-transparent border-gray-300/50 placeholder:text-gray-500 text-sm backdrop-blur-sm"
                 />
               </div>
-
-              {/* Category Tabs */}
-              <ScrollArea orientation="horizontal" className="w-full">
-                <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg min-w-max">
-                  {categories.map(category => (
-                    <button
-                      key={category.value}
-                      onClick={() => setActiveTab(category.name)}
-                      className={`px-3 sm:px-4 py-2 rounded-md text-sm font-medium transition-colors whitespace-nowrap ${
-                        activeTab === category.name
-                          ? 'bg-white text-black shadow-sm'
-                          : 'text-gray-600 hover:text-black hover:bg-white/50'
-                      }`}
-                    >
-                      {category.name}
-                    </button>
-                  ))}
-                </div>
-              </ScrollArea>
             </div>
 
             {/* Items Grid - Scrollable */}
@@ -490,10 +544,10 @@ const CreateMenuModal: React.FC<CreateMenuModalProps> = ({
                     {filteredItems.map(item => (
                       <div
                         key={item.id}
-                        className={`border rounded-lg p-3 cursor-pointer transition-all hover:shadow-md ${
+                        className={`border rounded-lg p-3 cursor-pointer transition-all hover:shadow-md backdrop-blur-sm ${
                           formData.selectedItems.includes(item.id)
-                            ? 'border-blue-500 bg-blue-50 shadow-md'
-                            : 'border-gray-200 bg-white hover:border-gray-300'
+                            ? 'border-blue-500/50 bg-blue-50/20 shadow-md'
+                            : 'border-gray-200/50 bg-transparent hover:border-gray-300/50 hover:bg-gray-50/10'
                         }`}
                         onClick={() => handleItemChange(item.id, !formData.selectedItems.includes(item.id))}
                       >
@@ -512,22 +566,24 @@ const CreateMenuModal: React.FC<CreateMenuModalProps> = ({
                             <h3 className="font-medium text-black text-sm line-clamp-1">
                               {item.name}
                             </h3>
-                            <p className="text-xs text-gray-600 mt-1 line-clamp-2">
-                              {item.description}
-                            </p>
+                            {item.description && (
+                              <p className="text-xs text-gray-600 mt-1 line-clamp-2">
+                                {item.description}
+                              </p>
+                            )}
                             <div className="flex items-center justify-between mt-2">
                               <span className="font-bold text-black text-sm">
                                 ₹{item.price}
                               </span>
                               <Badge
-                                variant={item.isVeg ? "default" : "destructive"}
+                                variant={item.foodType === "veg" ? "default" : "destructive"}
                                 className={`text-xs ${
-                                  item.isVeg
-                                    ? "bg-green-100 text-green-800 border-green-200"
-                                    : "bg-red-100 text-red-800 border-red-200"
+                                  item.foodType === "veg"
+                                    ? "bg-green-100/50 text-green-800 border-green-200/50"
+                                    : "bg-red-100/50 text-red-800 border-red-200/50"
                                 }`}
                               >
-                                {item.isVeg ? "Veg" : "Non-Veg"}
+                                {item.foodType === "veg" ? "Veg" : "Non-Veg"}
                               </Badge>
                             </div>
                           </div>
@@ -556,7 +612,7 @@ const CreateMenuModal: React.FC<CreateMenuModalProps> = ({
             </div>
 
             {errors.items && (
-              <div className="px-4 sm:px-6 py-3 border-t border-red-200 bg-red-50 flex-shrink-0">
+              <div className="px-4 sm:px-6 py-3 border-t border-red-200/20 bg-red-50/30 flex-shrink-0 backdrop-blur-sm">
                 <p className="text-xs sm:text-sm text-red-500 flex items-center gap-1">
                   <AlertCircle className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
                   <span className="break-words">{errors.items}</span>
@@ -567,19 +623,19 @@ const CreateMenuModal: React.FC<CreateMenuModalProps> = ({
         </div>
 
         {/* Footer - Fixed */}
-        <div className="px-4 sm:px-6 py-3 sm:py-4 border-t border-gray-200 flex flex-col sm:flex-row justify-end gap-2 sm:gap-3 flex-shrink-0 bg-gray-50/50 rounded-b-lg">
+        <div className="px-4 sm:px-6 py-3 sm:py-4 border-t border-gray-200/20 flex flex-col sm:flex-row justify-end gap-2 sm:gap-3 flex-shrink-0 bg-transparent backdrop-blur-sm rounded-b-lg">
           <Button
             variant="outline"
             onClick={handleCancel}
             disabled={isSubmitting}
-            className="w-full sm:w-auto px-4 sm:px-6 text-black border-gray-300 hover:bg-gray-50 text-sm"
+            className="w-full sm:w-auto px-4 sm:px-6 text-black border-gray-300/50 hover:bg-gray-50/20 text-sm bg-transparent backdrop-blur-sm"
           >
             Cancel
           </Button>
           <Button
             onClick={handleSubmit}
             disabled={isSubmitting}
-            className="w-full sm:w-auto px-4 sm:px-6 bg-green-600 hover:bg-green-700 text-white text-sm"
+            className="w-full sm:w-auto px-4 sm:px-6 bg-green-600/80 hover:bg-green-700/80 text-white text-sm backdrop-blur-sm"
           >
             {isSubmitting ? "Creating..." : "Create Menu"}
           </Button>
