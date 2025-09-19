@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Edit, Trash2, Eye } from "lucide-react";
 import ItemAddModal from "@/common/ItemAddModal";
 import CreateMenuModal from "@/common/CreateMenuModal";
+import EditMenuModal from "@/common/EditMenuModal"
 import {
   Select,
   SelectContent,
@@ -63,11 +64,17 @@ interface ApiCategory {
 }
 
 const ItemsList: React.FC = () => {
-  const currentUserData = useSelector((state: AppState) => state.currentUserData);
+  const currentUserData = useSelector(
+    (state: AppState) => state.currentUserData
+  );
 
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-  const [isCreateMenuModalOpen, setIsCreateMenuModalOpen] = useState<boolean>(false);
-  const [isCreateCategoryModalOpen, setIsCreateCategoryModalOpen] = useState<boolean>(false);
+  const [isCreateMenuModalOpen, setIsCreateMenuModalOpen] =
+    useState<boolean>(false);
+  const [isEditMenuModalOpen, setIsEditMenuModalOpen] =
+    useState<boolean>(false);
+  const [isCreateCategoryModalOpen, setIsCreateCategoryModalOpen] =
+    useState<boolean>(false);
   const [modalMode, setModalMode] = useState<"add" | "edit">("add");
   const [items, setItems] = useState<MenuItem[]>([]);
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
@@ -80,7 +87,7 @@ const ItemsList: React.FC = () => {
       name: "Home",
       count: 0,
       active: true,
-    }
+    },
   ]);
   const [apiCategories, setApiCategories] = useState<ApiCategory[]>([]);
   const [toast, setToast] = useState(null);
@@ -92,7 +99,9 @@ const ItemsList: React.FC = () => {
 
   const fetchItems = async () => {
     try {
-      const response = await apiGet(`/items/getItemsByCanteen/${currentUserData.canteenId}`);
+      const response = await apiGet(
+        `/items/getItemsByCanteen/${currentUserData.canteenId}`
+      );
       console.log(response, " items fetched");
       if (response.status === 200) {
         setItems(response.data.data);
@@ -109,14 +118,19 @@ const ItemsList: React.FC = () => {
     if (categoryName.toLowerCase() === "home") {
       return items?.length || 0; // Show all items for "Home"
     }
-    return items?.filter(
-      (item) => item?.categoryName?.toLowerCase() === categoryName?.toLowerCase()
-    ).length || 0;
+    return (
+      items?.filter(
+        (item) =>
+          item?.categoryName?.toLowerCase() === categoryName?.toLowerCase()
+      ).length || 0
+    );
   };
 
   const fetchMenuByCanteenID = async () => {
     try {
-      const response = await apiGet(`/menus/getMenuByCanteenID/${currentUserData.canteenId}`);
+      const response = await apiGet(
+        `/menus/getMenuByCanteenID/${currentUserData.canteenId}`
+      );
       console.log(response, " menu fetched");
       if (response.status === 200) {
         // Handle menu data if needed
@@ -128,7 +142,6 @@ const ItemsList: React.FC = () => {
     }
   };
 
-
   // Fetch categories from API
   useEffect(() => {
     const fetchCategories = async () => {
@@ -137,7 +150,7 @@ const ItemsList: React.FC = () => {
         console.log(response);
         const apiData: ApiCategory[] = response.data.data;
         setApiCategories(apiData);
-        
+
         // Create categories from API data, excluding duplicates
         const newCategories = apiData
           .filter(
@@ -204,12 +217,17 @@ const ItemsList: React.FC = () => {
   const handleCreateMenu = (): void => {
     setIsCreateMenuModalOpen(true);
   };
+  const handleEditMenu = (): void => {
+    setIsEditMenuModalOpen(true);
+  };
 
   const handleCreateCategory = (): void => {
     setIsCreateCategoryModalOpen(true);
   };
 
-  const handleCreateCategorySubmit = async (e: React.FormEvent): Promise<void> => {
+  const handleCreateCategorySubmit = async (
+    e: React.FormEvent
+  ): Promise<void> => {
     e.preventDefault();
     console.log("Submitting new category:", newCategoryName);
     if (!newCategoryName.trim()) {
@@ -231,7 +249,7 @@ const ItemsList: React.FC = () => {
             name: newCategoryName,
             count: 0,
             active: false,
-          }
+          },
         ]);
         setNewCategoryName("");
         setIsCreateCategoryModalOpen(false);
@@ -281,14 +299,15 @@ const ItemsList: React.FC = () => {
       setIsCreateMenuModalOpen(false);
     } else {
       showToast("Error", "Failed to create menu", "destructive");
-    } 
+    }
     // Add logic to handle menu creation
   };
 
   const getActiveItemsText = (): string => {
     const count = filteredMenuItems.length;
     const categoryDisplayName =
-      categories.find((cat) => cat.name.toLowerCase() === selectedCategory)?.name || selectedCategory;
+      categories.find((cat) => cat.name.toLowerCase() === selectedCategory)
+        ?.name || selectedCategory;
 
     if (selectedCategory === "home") {
       return `Showing all ${count} items`;
@@ -314,6 +333,10 @@ const ItemsList: React.FC = () => {
           <Button variant="outline" onClick={handleCreateMenu}>
             <Plus className="h-4 w-4 mr-2" />
             Create Menu
+          </Button>
+          <Button className="bg-gradient-primary" onClick={handleEditMenu}>
+            <Plus className="h-4 w-4 mr-2" />
+            Edit Menu
           </Button>
           <Button className="bg-gradient-primary" onClick={handleAddItem}>
             <Plus className="h-4 w-4 mr-2" />
@@ -428,7 +451,9 @@ const ItemsList: React.FC = () => {
                           ₹{item.price}
                         </span>
                         <Badge
-                          variant={item.foodType === "veg" ? "default" : "destructive"}
+                          variant={
+                            item.foodType === "veg" ? "default" : "destructive"
+                          }
                           className={`${
                             item.foodType === "veg"
                               ? "bg-green-100 text-green-800 hover:bg-green-200"
@@ -485,7 +510,13 @@ const ItemsList: React.FC = () => {
         menuItems={items}
         onSubmit={handleCreateMenuSubmit}
         categories={categories}
-
+      />
+      <EditMenuModal
+        open={isEditMenuModalOpen}
+        onOpenChange={setIsEditMenuModalOpen}
+        menuItems={items}
+        // onSubmit={handleCreateMenuSubmit}
+        categories={categories}
       />
 
       {/* Toast Notification */}
