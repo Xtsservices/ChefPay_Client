@@ -766,102 +766,206 @@ const fetchMenuByCanteenId = async () => {
 
           {/* Items Grid - Scrollable */}
           <div className="flex-1 overflow-hidden">
-            <ScrollArea className="h-full">
-              <div className="p-4 sm:p-6 pb-20">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3 sm:gap-4">
-                  {filteredItems.map((item) => (
-                    <div
-                      key={item.id}
-                      className={`border rounded-lg p-3 cursor-pointer transition-all hover:shadow-md backdrop-blur-sm ${
-                        formData.menuType === "daily"
-                          ? formData.selectedItems.includes(item.id)
-                            ? "border-blue-500/50 bg-blue-50/20 shadow-md"
-                            : "border-gray-200/50 bg-transparent hover:border-gray-300/50 hover:bg-gray-50/10"
-                          : Object.values(
-                              formData.selectedDayItems || {}
-                            ).some((arr: number[]) => arr.includes(item.id))
-                          ? "border-blue-500/50 bg-blue-50/20 shadow-md"
-                          : "border-gray-200/50 bg-transparent hover:border-gray-300/50 hover:bg-gray-50/10"
-                      }`}
-                      onClick={() =>
-                        handleItemChange(
-                          item.id,
-                          formData.menuType === "daily"
-                            ? !formData.selectedItems.includes(item.id)
-                            : undefined // handled per day elsewhere
-                        )
-                      }
-                    >
-                      <div className="flex items-start space-x-3">
-                        <Checkbox
-                          checked={
-                            formData.menuType === "daily"
-                              ? formData.selectedItems.includes(item.id)
-                              : Object.values(
-                                  formData.selectedDayItems || {}
-                                ).some((arr: number[]) => arr.includes(item.id))
-                          }
-                          onChange={() => {}}
-                          className="mt-1 flex-shrink-0"
-                        />
-                        <img
-                          src={item.image}
-                          alt={item.name}
-                          className="w-12 h-12 sm:w-14 sm:h-14 object-cover rounded-lg flex-shrink-0"
-                        />
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-medium text-black text-sm line-clamp-1">
-                            {item.name}
-                          </h3>
-                          {item.description && (
-                            <p className="text-xs text-gray-600 mt-1 line-clamp-2">
-                              {item.description}
-                            </p>
-                          )}
-                          <div className="flex items-center justify-between mt-2">
-                            <span className="font-bold text-black text-sm">
-                              ₹{item.price}
-                            </span>
-                            <Badge
-                              variant={
-                                item.foodType === "veg"
-                                  ? "default"
-                                  : "destructive"
-                              }
-                              className={`text-xs ${
-                                item.foodType === "veg"
-                                  ? "bg-green-100/50 text-green-800 border-green-200/50"
-                                  : "bg-red-100/50 text-red-800 border-red-200/50"
-                              }`}
-                            >
-                              {item.foodType === "veg" ? "Veg" : "Non-Veg"}
-                            </Badge>
-                          </div>
-                        </div>
+           <ScrollArea className="h-full">
+  <div className="p-4 sm:p-6 pb-20">
+
+    {/* 🔥 Selected Items Section */}
+    {(formData.menuType === "daily" && formData.selectedItems.length > 0) ||
+    (formData.menuType === "day-specific" &&
+      Object.keys(formData.selectedDayItems || {}).length > 0) ? (
+      <div className="mb-6 border border-gray-200/50 rounded-lg bg-blue-50/20 backdrop-blur-sm p-4">
+        <h3 className="text-sm font-semibold text-black mb-3">
+          Currently Selected Items
+        </h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-3">
+          {formData.menuType === "daily" &&
+            formData.selectedItems.map((itemId) => {
+              const item = filteredItems.find((i) => i.id === itemId);
+              if (!item) return null;
+              return (
+                <div
+                  key={itemId}
+                  className="flex items-start gap-3 p-3 border border-gray-200/50 rounded-lg bg-white/70 backdrop-blur-sm shadow-sm"
+                >
+                  <img
+                    src={item.image}
+                    alt={item.name}
+                    className="w-12 h-12 object-cover rounded-lg"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-medium text-black text-sm truncate">
+                      {item.name}
+                    </h4>
+                    {item.description && (
+                      <p className="text-xs text-gray-600 line-clamp-2">
+                        {item.description}
+                      </p>
+                    )}
+                    <div className="flex items-center justify-between mt-1">
+                      <Badge
+                        className={`text-xs ${
+                          item.foodType === "veg"
+                            ? "bg-green-100/50 text-green-800 border-green-200/50"
+                            : "bg-red-100/50 text-red-800 border-red-200/50"
+                        }`}
+                      >
+                        {item.foodType === "veg" ? "Veg" : "Non-Veg"}
+                      </Badge>
+                      <button
+                        onClick={() => handleItemChange(itemId, false)}
+                        className="text-red-500 hover:text-red-700"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+
+          {formData.menuType === "day-specific" &&
+            formData.selectedDays.map((dayKey) =>
+              (formData.selectedDayItems?.[dayKey] || []).map((itemId) => {
+                const item = filteredItems.find((i) => i.id === itemId);
+                if (!item) return null;
+                return (
+                  <div
+                    key={`${dayKey}-${itemId}`}
+                    className="flex items-start gap-3 p-3 border border-gray-200/50 rounded-lg bg-white/70 backdrop-blur-sm shadow-sm"
+                  >
+                    <img
+                      src={item.image}
+                      alt={item.name}
+                      className="w-12 h-12 object-cover rounded-lg"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-medium text-black text-sm truncate">
+                        {item.name}{" "}
+                        <span className="text-xs text-gray-500">
+                          ({dayKey})
+                        </span>
+                      </h4>
+                      {item.description && (
+                        <p className="text-xs text-gray-600 line-clamp-2">
+                          {item.description}
+                        </p>
+                      )}
+                      <div className="flex items-center justify-between mt-1">
+                        <Badge
+                          className={`text-xs ${
+                            item.foodType === "veg"
+                              ? "bg-green-100/50 text-green-800 border-green-200/50"
+                              : "bg-red-100/50 text-red-800 border-red-200/50"
+                          }`}
+                        >
+                          {item.foodType === "veg" ? "Veg" : "Non-Veg"}
+                        </Badge>
+                        <button
+                          onClick={() => handleItemChange(itemId, false, dayKey)}
+                          className="text-red-500 hover:text-red-700"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
                       </div>
                     </div>
-                  ))}
-
-                </div>
-                
-
-                {filteredItems.length === 0 && (
-                  <div className="text-center py-8">
-                    <p className="text-gray-500 text-sm">No items found</p>
-                    {searchTerm && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setSearchTerm("")}
-                        className="mt-2 text-black hover:text-black"
-                      >
-                        Clear search
-                      </Button>
-                    )}
                   </div>
-                )}
+                );
+              })
+            )}
+        </div>
+      </div>
+    ) : null}
+
+    {/* Items Grid */}
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3 sm:gap-4">
+      {filteredItems.map((item) => (
+        <div
+          key={item.id}
+          className={`border rounded-lg p-3 cursor-pointer transition-all hover:shadow-md backdrop-blur-sm ${
+            formData.menuType === "daily"
+              ? formData.selectedItems.includes(item.id)
+                ? "border-blue-500/50 bg-blue-50/20 shadow-md"
+                : "border-gray-200/50 bg-transparent hover:border-gray-300/50 hover:bg-gray-50/10"
+              : Object.values(formData.selectedDayItems || {}).some(
+                  (arr: number[]) => arr.includes(item.id)
+                )
+              ? "border-blue-500/50 bg-blue-50/20 shadow-md"
+              : "border-gray-200/50 bg-transparent hover:border-gray-300/50 hover:bg-gray-50/10"
+          }`}
+          onClick={() =>
+            handleItemChange(
+              item.id,
+              formData.menuType === "daily"
+                ? !formData.selectedItems.includes(item.id)
+                : undefined // handled per day elsewhere
+            )
+          }
+        >
+          <div className="flex items-start space-x-3">
+            <Checkbox
+              checked={
+                formData.menuType === "daily"
+                  ? formData.selectedItems.includes(item.id)
+                  : Object.values(formData.selectedDayItems || {}).some(
+                      (arr: number[]) => arr.includes(item.id)
+                    )
+              }
+              onChange={() => {}}
+              className="mt-1 flex-shrink-0"
+            />
+            <img
+              src={item.image}
+              alt={item.name}
+              className="w-12 h-12 sm:w-14 sm:h-14 object-cover rounded-lg flex-shrink-0"
+            />
+            <div className="flex-1 min-w-0">
+              <h3 className="font-medium text-black text-sm line-clamp-1">
+                {item.name}
+              </h3>
+              {item.description && (
+                <p className="text-xs text-gray-600 mt-1 line-clamp-2">
+                  {item.description}
+                </p>
+              )}
+              <div className="flex items-center justify-between mt-2">
+                <span className="font-bold text-black text-sm">
+                  ₹{item.price}
+                </span>
+                <Badge
+                  variant={item.foodType === "veg" ? "default" : "destructive"}
+                  className={`text-xs ${
+                    item.foodType === "veg"
+                      ? "bg-green-100/50 text-green-800 border-green-200/50"
+                      : "bg-red-100/50 text-red-800 border-red-200/50"
+                  }`}
+                >
+                  {item.foodType === "veg" ? "Veg" : "Non-Veg"}
+                </Badge>
               </div>
-            </ScrollArea>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+
+    {filteredItems.length === 0 && (
+      <div className="text-center py-8">
+        <p className="text-gray-500 text-sm">No items found</p>
+        {searchTerm && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setSearchTerm("")}
+            className="mt-2 text-black hover:text-black"
+          >
+            Clear search
+          </Button>
+        )}
+      </div>
+    )}
+  </div>
+</ScrollArea>
+
           </div>
 
           {errors.items && (
