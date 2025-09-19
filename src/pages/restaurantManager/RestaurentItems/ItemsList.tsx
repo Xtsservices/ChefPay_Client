@@ -67,7 +67,6 @@ const ItemsList: React.FC = () => {
   const currentUserData = useSelector(
     (state: AppState) => state.currentUserData
   );
-
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [isCreateMenuModalOpen, setIsCreateMenuModalOpen] =
     useState<boolean>(false);
@@ -126,21 +125,26 @@ const ItemsList: React.FC = () => {
     );
   };
 
-  const fetchMenuByCanteenID = async () => {
-    try {
-      const response = await apiGet(
-        `/menus/getMenuByCanteenID/${currentUserData.canteenId}`
-      );
-      console.log(response, " menu fetched");
-      if (response.status === 200) {
-        // Handle menu data if needed
-      } else {
-        console.error("Failed to fetch menu:", response);
-      }
-    } catch (error) {
-      console.error("Error fetching menu:", error);
+const [menuData, setMenuData] = useState<any | null>(null); // store menu
+
+const fetchMenuByCanteenID = async () => {
+  try {
+    const response = await apiGet(
+      `/menus/getMenuByCanteenID/${currentUserData.canteenId}`
+    );
+    console.log(response, " menu fetched");
+    if (response.status === 200 && response.data.data) {
+      setMenuData(response.data.data); // store fetched menu
+    } else {
+      setMenuData(null); // no menu exists
+      console.error("Failed to fetch menu:", response);
     }
-  };
+  } catch (error) {
+    setMenuData(null);
+    console.error("Error fetching menu:", error);
+  }
+};
+
 
   // Fetch categories from API
   useEffect(() => {
@@ -330,14 +334,18 @@ const ItemsList: React.FC = () => {
           </p>
         </div>
         <div className="flex gap-3">
-          <Button variant="outline" onClick={handleCreateMenu}>
-            <Plus className="h-4 w-4 mr-2" />
-            Create Menu
-          </Button>
-          <Button className="bg-gradient-primary" onClick={handleEditMenu}>
-            <Plus className="h-4 w-4 mr-2" />
-            Edit Menu
-          </Button>
+         {items.length === 0 && (
+    <Button variant="outline" onClick={handleCreateMenu}>
+      <Plus className="h-4 w-4 mr-2" />
+      Create Menu
+    </Button>
+  )}
+         {items.length > 0 && (
+    <Button className="bg-gradient-primary" onClick={handleEditMenu}>
+      <Edit className="h-4 w-4 mr-2" />
+      Edit Menu
+    </Button>
+  )}
           <Button className="bg-gradient-primary" onClick={handleAddItem}>
             <Plus className="h-4 w-4 mr-2" />
             Add Item
