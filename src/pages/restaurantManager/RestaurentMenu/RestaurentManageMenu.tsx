@@ -28,7 +28,7 @@ const restaurant: Restaurant =
 
 const RestaurentManageMenu = () => {
   return (
-    <div className="min-h-screen ">
+    <div className="min-h-screen">
       <RestaurantMenu restaurant={restaurant} />
     </div>
   );
