@@ -12,6 +12,8 @@ import { Plus, Edit, Trash2, Eye } from "lucide-react";
 import ItemAddModal from "@/common/ItemAddModal";
 import CreateMenuModal from "@/common/CreateMenuModal";
 import EditMenuModal from "@/common/EditMenuModal";
+import ItemEditModal from "@/common/ItemEditModal";
+
 import {
   Select,
   SelectContent,
@@ -26,7 +28,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { apiGet, apiPost } from "@/api/apis";
+import { apiGet, apiPost, apiPut, apiDelete } from "@/api/apis";
 import { useSelector } from "react-redux";
 import { AppState } from "@/store/storeTypes";
 
@@ -216,6 +218,27 @@ const ItemsList: React.FC = () => {
     setEditingItem(item);
     setIsModalOpen(true);
   };
+  // Add this function inside your ItemsList component
+  const handleDeleteItem = async (itemId: number) => {
+    if (!confirm("Are you sure you want to delete this item?")) return;
+
+    try {
+      const response = await apiDelete(`/items/deleteItem/${itemId}`, {});
+      console.log("Delete API response:", response);
+      if (response.status === 200) {
+        // Remove item from local state immediately
+        setItems((prevItems) => prevItems.filter((item) => item.id !== itemId));
+
+        showToast("Success", "Item deleted successfully", "success");
+      } else {
+        showToast("Error", "Failed to delete item", "destructive");
+        console.error("Delete failed:", response);
+      }
+    } catch (error) {
+      console.error("Error deleting item:", error);
+      showToast("Error", "Failed to delete item", "destructive");
+    }
+  };
 
   const handleCreateMenu = (): void => {
     setIsCreateMenuModalOpen(true);
@@ -267,28 +290,53 @@ const ItemsList: React.FC = () => {
       alert("Failed to create category");
     }
   };
-
-  const handleModalSubmit = async (formData: any): Promise<void> => {
+  const handleModalSubmit = async (
+    idOrFormData: number | any,
+    formData?: any
+  ): Promise<void> => {
     if (modalMode === "add") {
-      console.log("Adding new item:", formData);
       try {
-        const response = await apiPost("/items/createItem", formData);
-        console.log("Response from API:", response);
+        const response = await apiPost("/items/createItem", idOrFormData);
         if (response.status === 201) {
-          fetchItems(); // Refresh items to update counts
+          fetchItems();
           showToast("Success", "Item created successfully", "success");
           setIsModalOpen(false);
         } else {
           showToast("Error", "Failed to create item", "destructive");
         }
-        console.log("Item created successfully:", response);
       } catch (error) {
         console.error("Error creating item:", error);
         showToast("Error", "Failed to create item", "destructive");
       }
-    } else {
-      console.log("Updating item:", editingItem?.id, formData);
-      // Add logic to update existing item
+    } else if (modalMode === "edit" && editingItem && formData) {
+      try {
+        const id = idOrFormData; // first arg is ID
+        // Merge existing item and form values
+        const mergedData = { ...editingItem, ...formData };
+
+        // Build payload exactly as backend expects
+        const payload = {
+          description: mergedData.description ?? "",
+          price: mergedData.price ?? 0,
+          foodType: mergedData.foodType ?? "",
+          image: mergedData.image ?? "",
+          canteenId: mergedData.canteenId ?? 1,
+        };
+
+        console.log("Updating item with ID:", id, payload);
+
+        const response = await apiPut(`/items/updateItem/${id}`, payload);
+        if (response.status === 200) {
+          fetchItems();
+          showToast("Success", "Item updated successfully", "success");
+          setIsModalOpen(false);
+        } else {
+          showToast("Error", "Failed to update item", "destructive");
+        }
+      } catch (error) {
+        console.error("Error updating item:", error);
+        showToast("Error", "Failed to update item", "destructive");
+      }
     }
   };
 
@@ -432,7 +480,11 @@ const ItemsList: React.FC = () => {
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
-                        <Button size="sm" variant="destructive">
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => handleDeleteItem(item.id)}
+                        >
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
@@ -501,14 +553,24 @@ const ItemsList: React.FC = () => {
       </div>
 
       {/* Add/Edit Item Modal */}
-      <ItemAddModal
-        open={isModalOpen}
-        onOpenChange={setIsModalOpen}
-        mode={modalMode}
-        editItem={editingItem}
-        onSubmit={handleModalSubmit}
-        categories={categories}
-      />
+      {modalMode === "add" ? (
+        <ItemAddModal
+          open={isModalOpen}
+          onOpenChange={setIsModalOpen}
+          mode="add"
+          editItem={null}
+          onSubmit={handleModalSubmit}
+          categories={categories}
+        />
+      ) : (
+        <ItemEditModal
+          open={isModalOpen}
+          onOpenChange={setIsModalOpen}
+          editItem={editingItem!}
+          onSubmit={handleModalSubmit}
+          categories={categories}
+        />
+      )}
 
       {/* Create Menu Modal */}
       <CreateMenuModal

@@ -333,31 +333,32 @@ const RestaurantManagerOrders: React.FC = () => {
   };
 
   return (
-    <div className="bg-white rounded-xl min-h-screen">
-      <div className="p-6">
-        {/* Orders Table */}
-        <OrdersTable
-          orders={currentOrders}
-          onViewOrder={handleViewOrder}
-          searchTerm={searchTerm}
-          onSearchChange={setSearchTerm}
-          startDate={startDate}
-          endDate={endDate}
-          onDateRangeChange={handleDateRangeChange}
-          currentPage={currentPage}
-          totalPages={totalPages}
-          itemsPerPage={itemsPerPage}
-          onItemsPerPageChange={handleItemsPerPageChange}
-          onPageChange={handlePageChange}
-          onPrevious={handlePrevious}
-          onNext={handleNext}
-          totalOrders={filteredOrders.length}
-        />
+  <div className="bg-[#121212] dark:bg-gray-900 text-black dark:text-blue-400 rounded-xl min-h-screen">
+  <div className="p-6">
+    {/* Orders Table */}
+    <OrdersTable
+      orders={currentOrders}
+      onViewOrder={handleViewOrder}
+      searchTerm={searchTerm}
+      onSearchChange={setSearchTerm}
+      startDate={startDate}
+      endDate={endDate}
+      onDateRangeChange={handleDateRangeChange}
+      currentPage={currentPage}
+      totalPages={totalPages}
+      itemsPerPage={itemsPerPage}
+      onItemsPerPageChange={handleItemsPerPageChange}
+      onPageChange={handlePageChange}
+      onPrevious={handlePrevious}
+      onNext={handleNext}
+      totalOrders={filteredOrders.length}
+    />
 
-        {/* Order Details Modal */}
-        <OrderDetailsModal order={selectedOrder} onClose={handleCloseModal} />
-      </div>
-    </div>
+    {/* Order Details Modal */}
+    <OrderDetailsModal order={selectedOrder} onClose={handleCloseModal} />
+  </div>
+</div>
+
   );
 };
 
