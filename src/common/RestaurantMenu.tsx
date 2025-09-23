@@ -106,11 +106,11 @@ const RestaurantMenu: React.FC<Props> = ({ restaurant }) => {
       }
     };
 
-    const fetchMenuItems = async () => {
-      try {
-        const response = await apiGet(
-          `/menus/getMenuByCanteenID/${currentUserData.canteenId}`
-        );
+   const fetchMenuItems = async () => {
+  try {
+    const response = await apiGet(
+      `/menus/getMenuByCanteenID/${currentUserData.canteenId}`
+    );
 
         const menus = response.data.data || [];
 
@@ -144,11 +144,12 @@ const RestaurantMenu: React.FC<Props> = ({ restaurant }) => {
           availableDays: dayMap[Number(item.id)] || [],
         }));
 
-        setMenuItems(transformed);
-      } catch (error) {
-        console.error("Error fetching menu items:", error);
-      }
-    };
+    setMenuItems(transformed);
+  } catch (error) {
+    console.error("Error fetching menu items:", error);
+  }
+};
+
 
     if (currentUserData?.canteenId) {
       fetchCategories();
