@@ -45,8 +45,8 @@ interface CreateMenuModalProps {
 interface CreateMenuData {
   menuName?: string;
   menuType: "daily" | "day-specific";
-  selectedDays: string[];
-  selectedItems: number[];
+  days: string[];
+  items: number[];
   canteenId: number;
 }
 
@@ -70,8 +70,8 @@ const CreateMenuModal: React.FC<CreateMenuModalProps> = ({
   const [formData, setFormData] = useState<CreateMenuData>({
     menuName: "",
     menuType: "daily",
-    selectedDays: [],
-    selectedItems: [],
+    days: [],
+    items: [],
     canteenId: currentUserData?.canteenId || 1
   });
 
@@ -154,8 +154,8 @@ const CreateMenuModal: React.FC<CreateMenuModalProps> = ({
       setFormData({
         menuName: "",
         menuType: "daily",
-        selectedDays: [],
-        selectedItems: [],
+        days: [],
+        items: [],
         canteenId: currentUserData?.canteenId || 1
       });
       setErrors({});
@@ -167,7 +167,7 @@ const CreateMenuModal: React.FC<CreateMenuModalProps> = ({
   // Reset days when menu type changes
   useEffect(() => {
     if (formData.menuType === "daily") {
-      setFormData(prev => ({ ...prev, selectedDays: [] }));
+      setFormData(prev => ({ ...prev, days: [] }));
     }
   }, [formData.menuType]);
 
@@ -175,11 +175,11 @@ const CreateMenuModal: React.FC<CreateMenuModalProps> = ({
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
 
-    if (formData.menuType === "day-specific" && formData.selectedDays.length === 0) {
+    if (formData.menuType === "day-specific" && formData.days.length === 0) {
       newErrors.days = "Please select at least one day for day-specific menu";
     }
 
-    if (formData.selectedItems.length === 0) {
+    if (formData.items.length === 0) {
       newErrors.items = "Please select at least one item";
     }
 
@@ -200,9 +200,9 @@ const CreateMenuModal: React.FC<CreateMenuModalProps> = ({
   const handleDayChange = (dayKey: string, checked: boolean): void => {
     setFormData(prev => ({
       ...prev,
-      selectedDays: checked
-        ? [...prev.selectedDays, dayKey]
-        : prev.selectedDays.filter(day => day !== dayKey)
+      days: checked
+        ? [...prev.days, dayKey]
+        : prev.days.filter(day => day !== dayKey)
     }));
 
     if (errors.days) {
@@ -214,9 +214,9 @@ const CreateMenuModal: React.FC<CreateMenuModalProps> = ({
   const handleItemChange = (itemId: number, checked: boolean): void => {
     setFormData(prev => ({
       ...prev,
-      selectedItems: checked
-        ? [...prev.selectedItems, itemId]
-        : prev.selectedItems.filter(id => id !== itemId)
+      items: checked
+        ? [...prev.items, itemId]
+        : prev.items.filter(id => id !== itemId)
     }));
 
     if (errors.items) {
@@ -249,8 +249,8 @@ const CreateMenuModal: React.FC<CreateMenuModalProps> = ({
       const payload: CreateMenuData = {
         ...(formData.menuName?.trim() && { menuName: formData.menuName.trim() }),
         menuType: formData.menuType,
-        selectedDays: formData.selectedDays,
-        selectedItems: formData.selectedItems,
+        days: formData.days,
+        items: formData.items,
         canteenId: currentUserData?.canteenId || formData.canteenId
       };
 
@@ -263,8 +263,8 @@ const CreateMenuModal: React.FC<CreateMenuModalProps> = ({
       setFormData({
         menuName: "",
         menuType: "daily",
-        selectedDays: [],
-        selectedItems: [],
+        days: [],
+        items: [],
         canteenId: currentUserData?.canteenId || 1
       });
       setErrors({});
@@ -282,8 +282,8 @@ const CreateMenuModal: React.FC<CreateMenuModalProps> = ({
     setFormData({
       menuName: "",
       menuType: "daily",
-      selectedDays: [],
-      selectedItems: [],
+      days: [],
+      items: [],
       canteenId: currentUserData?.canteenId || 1
     });
     setErrors({});
@@ -410,10 +410,10 @@ const CreateMenuModal: React.FC<CreateMenuModalProps> = ({
                     </Label>
                     
                     {/* Selected Days Display */}
-                    {formData.selectedDays.length > 0 && (
+                    {formData.days.length > 0 && (
                       <div className="max-h-16 overflow-y-auto">
                         <div className="flex flex-wrap gap-1 p-2 bg-transparent backdrop-blur-sm rounded border border-gray-200/50">
-                          {formData.selectedDays.map(dayKey => {
+                          {formData.days.map(dayKey => {
                             const day = daysOfWeek.find(d => d.key === dayKey);
                             return (
                               <Badge
@@ -435,7 +435,7 @@ const CreateMenuModal: React.FC<CreateMenuModalProps> = ({
                     <div className="grid grid-cols-2 gap-2">
                       {daysOfWeek.map(day => {
                         const isToday = getCurrentDay() === day.key;
-                        const isSelected = formData.selectedDays.includes(day.key);
+                        const isSelected = formData.days.includes(day.key);
                         
                         return (
                           <div
@@ -479,27 +479,27 @@ const CreateMenuModal: React.FC<CreateMenuModalProps> = ({
                     Selected Items
                   </div>
                   <div className="text-xl sm:text-2xl font-bold text-blue-600 mt-1">
-                    {formData.selectedItems.length}
+                    {formData.items.length}
                   </div>
                   <div className="text-xs text-gray-600 mt-1">
                     items selected for this menu
                   </div>
-                  {formData.menuType === "day-specific" && formData.selectedDays.length > 0 && (
+                  {formData.menuType === "day-specific" && formData.days.length > 0 && (
                     <div className="text-xs text-gray-600 mt-1 break-words">
-                      Available on: {formData.selectedDays.join(', ')}
+                      Available on: {formData.days.join(', ')}
                     </div>
                   )}
                 </div>
 
                 {/* Selected Items List */}
-                {formData.selectedItems.length > 0 && (
+                {formData.items.length > 0 && (
                   <div className="space-y-2 mb-4">
                     <Label className="text-sm font-medium text-black">
                       Selected Items:
                     </Label>
                     <ScrollArea className="max-h-48">
                       <div className="space-y-1">
-                        {formData.selectedItems.map(itemId => {
+                        {formData.items.map(itemId => {
                           const item = menuItems.find(item => item.id === itemId);
                           return item ? (
                             <div key={itemId} className="flex items-center justify-between p-2 bg-transparent backdrop-blur-sm rounded border border-gray-200/50 text-xs">
@@ -545,15 +545,15 @@ const CreateMenuModal: React.FC<CreateMenuModalProps> = ({
                       <div
                         key={item.id}
                         className={`border rounded-lg p-3 cursor-pointer transition-all hover:shadow-md backdrop-blur-sm ${
-                          formData.selectedItems.includes(item.id)
+                          formData.items.includes(item.id)
                             ? 'border-blue-500/50 bg-blue-50/20 shadow-md'
                             : 'border-gray-200/50 bg-transparent hover:border-gray-300/50 hover:bg-gray-50/10'
                         }`}
-                        onClick={() => handleItemChange(item.id, !formData.selectedItems.includes(item.id))}
+                        onClick={() => handleItemChange(item.id, !formData.items.includes(item.id))}
                       >
                         <div className="flex items-start space-x-3">
                           <Checkbox
-                            checked={formData.selectedItems.includes(item.id)}
+                            checked={formData.items.includes(item.id)}
                             onChange={() => {}}
                             className="mt-1 flex-shrink-0"
                           />
