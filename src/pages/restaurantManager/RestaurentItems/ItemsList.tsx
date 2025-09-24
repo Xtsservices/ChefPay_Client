@@ -381,19 +381,18 @@ const ItemsList: React.FC = () => {
           </p>
         </div>
         <div className="flex gap-3">
-          {menuData ? (
-            <Button className="bg-gradient-primary" onClick={handleEditMenu}>
-              <Edit className="h-4 w-4 mr-2" />
-              Edit Menu
-            </Button>
-          ):(
+          {items.length === 0 && (
             <Button variant="outline" onClick={handleCreateMenu}>
               <Plus className="h-4 w-4 mr-2" />
               Create Menu
             </Button>
-          )
-          }
-
+          )}
+          {items.length > 0 && (
+            <Button className="bg-gradient-primary" onClick={handleEditMenu}>
+              <Edit className="h-4 w-4 mr-2" />
+              Edit Menu
+            </Button>
+          )}
           <Button className="bg-gradient-primary" onClick={handleAddItem}>
             <Plus className="h-4 w-4 mr-2" />
             Add Item

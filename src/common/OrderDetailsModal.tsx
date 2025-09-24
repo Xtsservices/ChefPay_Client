@@ -1,212 +1,171 @@
-// components/OrderDetailsModal.tsx
 import React from "react";
 
 type OrderItem = {
-  id: string;
-  name: string;
+  itemName: string;
   quantity: number;
-  price: number;
-  isVeg: boolean;
+  foodType: string;
+  image: string;
+  categoryName: string;
 };
 
-type OrderDetails = {
+type Order = {
   orderId: string;
+  orderNo: string;
   customerNumber: string;
-  restaurantInfo: string;
   amount: number;
-  status: 'Completed' | 'Pending' | 'Processing';
+  status: "Completed" | "Pending" | "Processing" | "Placed";
   time: string;
-  customerName: string;
-  deliveryAddress: string;
-  paymentMethod: string;
+  date: Date;
   items: OrderItem[];
+  paymentStatus: string;
 };
 
-type Props = {
-  order: OrderDetails | null;
+const OrderDetailsModal: React.FC<{
+  order: Order | null;
   onClose: () => void;
-};
-
-const OrderDetailsModal: React.FC<Props> = ({ order, onClose }) => {
+}> = ({ order, onClose }) => {
   if (!order) return null;
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'Completed': return 'text-green-600 bg-green-100';
-      case 'Pending': return 'text-yellow-600 bg-yellow-100';
-      case 'Processing': return 'text-blue-600 bg-blue-100';
-      default: return 'text-gray-600 bg-gray-100';
+      case "Completed":
+        return "text-green-600 bg-green-100";
+      case "Pending":
+        return "text-yellow-600 bg-yellow-100";
+      case "Processing":
+        return "text-blue-600 bg-blue-100";
+      case "Placed":
+        return "text-purple-600 bg-purple-100";
+      default:
+        return "text-gray-600 bg-gray-100";
     }
   };
 
   return (
-  <div
-  className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4"
-  onClick={onClose}
->
-  <div
-    className="bg-[#1E1E1E] rounded-2xl shadow-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto border border-gray-800"
-    onClick={e => e.stopPropagation()}
-  >
-    {/* Header */}
-    <div className="flex items-center justify-between p-6 border-b border-gray-800">
-      <div>
-        <h2 className="text-xl font-bold text-white">Order Details</h2>
-        <p className="text-sm text-gray-400">View complete order information</p>
-      </div>
-      <button
-        onClick={onClose}
-        className="p-2 hover:bg-[#2A2A2A] rounded-lg transition-colors"
+    <div
+      className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4"
+      onClick={onClose}
+    >
+      <div
+        className="bg-[#09090b] rounded-2xl shadow-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto border border-gray-800"
+        onClick={(e) => e.stopPropagation()}
       >
-        <svg
-          className="w-6 h-6 text-gray-300"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-        </svg>
-      </button>
-    </div>
-
-    {/* Order Info */}
-    <div className="p-6 space-y-6">
-      {/* Order Summary */}
-      <div className="bg-[#252525] rounded-xl p-4 border border-gray-800">
-        <h3 className="text-lg font-semibold text-white mb-4">Order Summary</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-400 mb-1">Order ID</label>
-            <p className="text-white font-medium">{order.orderId}</p>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-400 mb-1">Status</label>
-            <span
-              className={`inline-flex px-3 py-1 text-sm font-semibold rounded-full ${getStatusColor(
-                order.status
-              )}`}
-            >
-              {order.status}
-            </span>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-400 mb-1">Order Time</label>
-            <p className="text-white font-medium">{order.time}</p>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-400 mb-1">Total Amount</label>
-            <p className="text-white font-bold text-lg">₹{order.amount}</p>
-          </div>
+        {/* Header */}
+        <div className="flex items-center justify-between p-6 border-b border-gray-800">
+          <h2 className="text-2xl font-bold text-white">
+            Order #{order.orderNo}
+          </h2>
+          <button
+            onClick={onClose}
+            className="p-2 hover:bg-[#2A2A2A] rounded-lg transition-colors"
+          >
+            ✕
+          </button>
         </div>
-      </div>
 
-      {/* Customer Information */}
-      <div className="bg-[#252525] rounded-xl p-4 border border-gray-800">
-        <h3 className="text-lg font-semibold text-white mb-4">Customer Information</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-400 mb-1">Customer Name</label>
-            <p className="text-white font-medium">{order.customerName}</p>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-400 mb-1">Phone Number</label>
-            <p className="text-white font-medium">{order.customerNumber}</p>
-          </div>
-          <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-400 mb-1">Delivery Address</label>
-            <p className="text-white font-medium">{order.deliveryAddress}</p>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-400 mb-1">Payment Method</label>
-            <p className="text-white font-medium">{order.paymentMethod}</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Order Items */}
-      <div>
-        <h3 className="text-lg font-semibold text-white mb-4">Order Items</h3>
-        <div className="bg-[#1E1E1E] border border-gray-800 rounded-lg overflow-hidden">
-          <table className="w-full">
-            <thead className="bg-[#252525]">
-              <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                  Item
-                </th>
-                <th className="px-4 py-3 text-center text-xs font-medium text-gray-300 uppercase tracking-wider">
-                  Qty
-                </th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">
-                  Price
-                </th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">
-                  Total
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-700">
-              {order.items.map((item, index) => (
-                <tr
-                  key={index}
-                  className="hover:bg-[#2A2A2A] transition-colors"
+        {/* Order Summary */}
+        <div className="p-6 space-y-6">
+          <div className="bg-[#09090b] rounded-xl p-4 border border-gray-800">
+            <h3 className="text-lg font-semibold text-white mb-4">
+              Order Summary
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <p className="text-white">
+                <span className="text-gray-400">Order ID:</span> {order.orderId}
+              </p>
+              <p className="text-white">
+                <span className="text-gray-400">Date:</span>{" "}
+                {order.date.toLocaleDateString()} {order.time}
+              </p>
+              <p className="text-white">
+                <span className="text-gray-400">Status:</span>{" "}
+                <span
+                  className={`px-3 py-1 rounded-full text-sm font-semibold ${getStatusColor(
+                    order.status
+                  )}`}
                 >
-                  <td className="px-4 py-3">
-                    <div className="flex items-center space-x-3">
-                      <span
-                        className={`w-3 h-3 rounded-full border-2 ${
-                          item.isVeg
-                            ? "bg-green-500 border-green-500"
-                            : "bg-red-500 border-red-500"
-                        }`}
-                      ></span>
-                      <span className="text-sm font-medium text-white">{item.name}</span>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-center">
-                    <span className="text-sm text-white font-medium">{item.quantity}</span>
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    <span className="text-sm text-white">₹{item.price}</span>
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    <span className="text-sm font-medium text-white">
-                      ₹{item.price * item.quantity}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-            <tfoot className="bg-[#252525]">
-              <tr>
-                <td colSpan={3} className="px-4 py-3 text-right font-semibold text-gray-300">
-                  Total Amount:
-                </td>
-                <td className="px-4 py-3 text-right font-bold text-lg text-white">
-                  ₹{order.amount}
-                </td>
-              </tr>
-            </tfoot>
-          </table>
+                  {order.status}
+                </span>
+              </p>
+              <p className="text-white">
+                <span className="text-gray-400">Payment:</span>{" "}
+                {order.paymentStatus}
+              </p>
+            </div>
+            <p className="text-white font-bold text-lg mt-4">
+              Total Amount: ₹{order.amount}
+            </p>
+          </div>
+
+          {/* Customer Info */}
+          <div className="bg-[#09090b] rounded-xl p-4 border border-gray-800">
+            <h3 className="text-lg font-semibold text-white mb-4">
+              Customer Info
+            </h3>
+            <p className="text-white">
+              <span className="text-gray-400">Mobile:</span>{" "}
+              {order.customerNumber}
+            </p>
+          </div>
+
+          {/* Order Items */}
+          <div>
+            <h3 className="text-lg font-semibold text-white mb-4">
+              Ordered Items
+            </h3>
+            <div className="bg-[#09090b] border border-gray-800 rounded-lg overflow-hidden">
+              <table className="w-full">
+                <thead>
+                  <tr className="text-gray-400 text-sm">
+                    <th className="px-4 py-2 text-left">Item</th>
+                    <th className="px-4 py-2">Qty</th>
+                    <th className="px-4 py-2">Category</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {order.items.map((item, idx) => (
+                    <tr
+                      key={idx}
+                      className="border-t border-gray-700 hover:bg-[#1A1A1A]"
+                    >
+                      <td className="px-4 py-2 flex items-center gap-3">
+                        <img
+                          src={item.image}
+                          alt={item.itemName}
+                          className="w-12 h-12 rounded-lg object-cover"
+                        />
+                        <div>
+                          <p className="text-white">{item.itemName}</p>
+                          <p className="text-xs text-gray-400">
+                            {item.foodType}
+                          </p>
+                        </div>
+                      </td>
+                      <td className="px-4 py-2 text-center text-white">
+                        {item.quantity}
+                      </td>
+                      <td className="px-4 py-2 text-center text-gray-300">
+                        {item.categoryName}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="flex justify-end space-x-3 p-6 border-t border-gray-800">
+          <button
+            onClick={onClose}
+            className="px-6 py-2 text-sm font-medium text-gray-200 bg-[#2A2A2A] border border-gray-700 rounded-lg hover:bg-[#3A3A3A]"
+          >
+            Close
+          </button>
         </div>
       </div>
     </div>
-
-    {/* Footer */}
-    <div className="flex justify-end space-x-3 p-6 border-t border-gray-800">
-      <button
-        onClick={onClose}
-        className="px-6 py-2 text-sm font-medium text-gray-200 bg-[#2A2A2A] border border-gray-700 rounded-lg hover:bg-[#3A3A3A] transition-colors"
-      >
-        Close
-      </button>
-      <button className="px-6 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors">
-        Print Order
-      </button>
-    </div>
-  </div>
-</div>
-
-
   );
 };
 
