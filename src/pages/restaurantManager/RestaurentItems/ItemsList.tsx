@@ -340,7 +340,7 @@ const ItemsList: React.FC = () => {
     }
   };
 
-  const handleCreateMenuSubmit = async (menuData: any): void => {
+  const handleCreateMenuSubmit = async (menuData: any): Promise<void> => {
     menuData.canteenId = 1;
     console.log("Creating new menu:", menuData);
     const response = await apiPost("/menus/createMenu", menuData);
