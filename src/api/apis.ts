@@ -4,7 +4,7 @@ import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
 // Base API URL
 // const API_BASE_URL = "http://172.16.4.150:3100/api";
 
-const API_BASE_URL = "http://172.16.4.223:3100/api";
+const API_BASE_URL = "http://72.60.102.11:3100/api";
 
 // Helper to get token from localStorage
 const getToken = (): string | null => localStorage.getItem("accessToken");
