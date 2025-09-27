@@ -101,7 +101,7 @@ const ItemsList: React.FC = () => {
   const fetchItems = async () => {
     try {
       const response = await apiGet(
-        `/items/getItemsByCanteen/${currentUserData.canteenId}`
+        `/items/getItemsByCanteenforweb/${currentUserData.canteenId}`
       );
       console.log(response, " items fetched");
       if (response.status === 200) {
@@ -341,7 +341,8 @@ const ItemsList: React.FC = () => {
   };
 
   const handleCreateMenuSubmit = async (menuData: any): Promise<void> => {
-    menuData.canteenId = 1;
+    const canteenId = currentUserData?.canteenId || 1;
+    menuData.canteenId = canteenId;
     console.log("Creating new menu:", menuData);
     const response = await apiPost("/menus/createMenu", menuData);
     console.log("Response from API:", response);

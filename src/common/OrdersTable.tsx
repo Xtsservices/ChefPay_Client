@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useSelector } from "react-redux";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { Search } from "lucide-react";
@@ -28,6 +29,8 @@ type Order = {
 
 // ================== Orders Table ==================
 const OrdersTable: React.FC = () => {
+  const currentUserData = useSelector((state: any) => state.currentUserData);
+
   const [orders, setOrders] = useState<Order[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [startDate, setStartDate] = useState<Date | null>(null);
@@ -38,48 +41,80 @@ const OrdersTable: React.FC = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
 
+  // ✅ Set default date range to "yesterday to today"
+  useEffect(() => {
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(today.getDate() - 1);
+
+    setStartDate(yesterday);
+    setEndDate(today);
+  }, []); // Runs only on mount to set default dates
+
   // ✅ Fetch Orders API
-  const fetchOrdersByCanteenID = async (canteenId: number) => {
+  const fetchOrdersByCanteenID = async (
+    canteenId: number,
+    start: Date | null,
+    end: Date | null,
+    page: number,
+    limit: number
+  ) => {
     try {
+      // Format dates to YYYY-MM-DD in local timezone
+      const formatDate = (date: Date | null) => {
+        if (!date) return "";
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, "0"); // Months are 0-based
+        const day = String(date.getDate()).padStart(2, "0");
+        return `${year}-${month}-${day}`;
+      };
+
+      const queryParams = new URLSearchParams({
+        ...(start && { startDate: formatDate(start) }),
+        ...(end && { endDate: formatDate(end) }),
+        page: page.toString(),
+        limit: limit.toString(),
+      }).toString();
+
       const response = await apiGet(
-        `/orders/getallordersbycanteenId/${canteenId}`
+        `/orders/getallordersbycanteenId/${canteenId}?${queryParams}`
       );
 
-      if (response.data && response.data.success && response.data.data) {
-        const formattedOrders: Order[] = response.data.data.map((order: any) => {
-          return {
-            orderId: order.orderId?.toString() || "N/A",
-            orderNo: order.orderNo || "N/A",
-            customerNumber: order.user?.mobile || "N/A",
-            amount: parseFloat(order.totalAmount || 0),
-            status:
-              order.orderStatus?.toLowerCase() === "pending"
-                ? "Pending"
-                : order.orderStatus?.toLowerCase() === "completed"
-                ? "Completed"
-                : order.orderStatus?.toLowerCase() === "processing"
-                ? "Processing"
-                : "Placed",
-            time: new Date(order.createdAt).toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            }),
-            date: new Date(order.createdAt),
-            items:
-              order.items?.map((i: any) => ({
-                itemName: i.itemName || "Unknown Item",
-                quantity: i.quantity || 1,
-                foodType: i.foodType || "N/A",
-                image: i.image || "/placeholder.png",
-                categoryName: i.category?.name || "Others",
-              })) || [],
-            paymentStatus: order.payment?.status || "N/A",
-          };
-        });
+      console.log("Fetched Orders Response:", response);
+
+      if (response.status === 200 && response.data?.data) {
+        const formattedOrders: Order[] = response.data.data.orders?.map((order: any) => ({
+          orderId: order.orderId?.toString() || "N/A",
+          orderNo: order.orderNo || "N/A",
+          customerNumber: order.user?.mobile || "N/A",
+          amount: parseFloat(order.totalAmount || 0),
+          status:
+            order.orderStatus?.toLowerCase() === "pending"
+              ? "Pending"
+              : order.orderStatus?.toLowerCase() === "completed"
+              ? "Completed"
+              : order.orderStatus?.toLowerCase() === "processing"
+              ? "Processing"
+              : "Placed",
+          time: new Date(order.createdAt).toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
+          date: new Date(order.createdAt),
+          items:
+            order.items?.map((i: any) => ({
+              itemName: i.itemName || "Unknown Item",
+              quantity: i.quantity || 1,
+              foodType: i.foodType || "N/A",
+              image: i.image || "/placeholder.png",
+              categoryName: i.category?.name || "Others",
+            })) || [],
+          paymentStatus: order.payment?.status || "N/A",
+        }));
 
         setOrders(formattedOrders);
-        setTotalOrders(formattedOrders.length);
-        setTotalPages(Math.ceil(formattedOrders.length / itemsPerPage));
+        setTotalOrders(response.data.data.totalOrders || formattedOrders.length);
+        setTotalPages(response.data.data.totalPages || Math.ceil(formattedOrders.length / itemsPerPage));
       } else {
         setOrders([]);
         console.error("Failed to fetch orders:", response);
@@ -90,10 +125,18 @@ const OrdersTable: React.FC = () => {
     }
   };
 
-  // ✅ Fetch orders on mount
+  // ✅ Fetch orders on mount, date change, or page change
   useEffect(() => {
-    fetchOrdersByCanteenID(1); // example: canteenId = 1
-  }, []);
+    if (currentUserData && currentUserData.canteenId && startDate && endDate) {
+      fetchOrdersByCanteenID(
+        currentUserData.canteenId, // Use currentUserData.canteenId instead of hardcoding 1
+        startDate,
+        endDate,
+        currentPage,
+        itemsPerPage
+      );
+    }
+  }, [currentUserData, startDate, endDate, currentPage, itemsPerPage]);
 
   // ✅ Handle pagination
   const handlePageChange = (page: number) => setCurrentPage(page);
@@ -117,7 +160,7 @@ const OrdersTable: React.FC = () => {
     const pages = [];
     const maxVisiblePages = 5;
     let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
-    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+    const endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
 
     if (endPage - startPage + 1 < maxVisiblePages) {
       startPage = Math.max(1, endPage - maxVisiblePages + 1);
@@ -141,16 +184,21 @@ const OrdersTable: React.FC = () => {
           <div className="relative">
             <input
               type="text"
-              placeholder="Search Orders..."
+              placeholder="Search by customer number..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 pr-4 py-2 border border-gray-700 rounded-lg text-sm
-                     text-white bg-[#09090b]
-                     focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-64"
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setCurrentPage(1); // Reset to page 1 on search
+              }}
+              className="px-4 py-2 pl-10 border border-gray-700 rounded-lg text-sm
+                         text-white bg-[#09090b]
+                         focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <Search
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+              size={18}
+            />
           </div>
-
           {/* Date Range Picker */}
           <div className="relative">
             <DatePicker
@@ -160,11 +208,12 @@ const OrdersTable: React.FC = () => {
               onChange={([start, end]) => {
                 setStartDate(start);
                 setEndDate(end);
+                setCurrentPage(1); // Reset to page 1 on date change
               }}
               placeholderText="Select date range"
               className="px-4 py-2 border border-gray-700 rounded-lg text-sm
-                     text-white bg-[#09090b]
-                     focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-64"
+                         text-white bg-[#09090b]
+                         focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-64"
               dateFormat="MM/dd/yyyy"
             />
           </div>
