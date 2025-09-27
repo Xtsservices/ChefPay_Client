@@ -41,6 +41,8 @@ const OrderDetailsModal: React.FC<{
     }
   };
 
+  console.log("order", order);
+
   return (
     <div
       className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4"
@@ -74,8 +76,8 @@ const OrderDetailsModal: React.FC<{
                 <span className="text-gray-400">Order ID:</span> {order.orderId}
               </p>
               <p className="text-white">
-                <span className="text-gray-400">Date:</span>{" "}
-                {order.date.toLocaleDateString()} {order.time}
+                <span className="text-gray-400">Time:</span>{" "}
+                {order?.time}
               </p>
               <p className="text-white">
                 <span className="text-gray-400">Status:</span>{" "}
@@ -87,10 +89,10 @@ const OrderDetailsModal: React.FC<{
                   {order.status}
                 </span>
               </p>
-              <p className="text-white">
+              {/* <p className="text-white">
                 <span className="text-gray-400">Payment:</span>{" "}
                 {order.paymentStatus}
-              </p>
+              </p> */}
             </div>
             <p className="text-white font-bold text-lg mt-4">
               Total Amount: ₹{order.amount}
@@ -119,7 +121,7 @@ const OrderDetailsModal: React.FC<{
                   <tr className="text-gray-400 text-sm">
                     <th className="px-4 py-2 text-left">Item</th>
                     <th className="px-4 py-2">Qty</th>
-                    <th className="px-4 py-2">Category</th>
+                    <th className="px-4 py-2">Name</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -145,7 +147,7 @@ const OrderDetailsModal: React.FC<{
                         {item.quantity}
                       </td>
                       <td className="px-4 py-2 text-center text-gray-300">
-                        {item.categoryName}
+                        {item.name}
                       </td>
                     </tr>
                   ))}
